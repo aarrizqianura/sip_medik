@@ -9,12 +9,63 @@
         <p class="text-secondary fs-sm mb-0">Pantau status telaah dan verifikasi berkas perpanjangan SIP Anda oleh Subkomite Kredensial Komite Medik</p>
     </div>
     <div>
-        <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-teal text-white btn-sm d-flex align-items-center gap-2">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <span>Unggah Perpanjangan SIP Baru</span>
-        </a>
+        @if($isStrValid)
+            <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-teal text-white btn-sm d-flex align-items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Unggah Perpanjangan SIP Baru</span>
+            </a>
+        @else
+            <button class="btn btn-secondary btn-sm d-flex align-items-center gap-2" disabled title="Modul pengurusan SIP terkunci (Syarat mutlak STR belum tervalidasi)">
+                <i class="fa-solid fa-lock"></i>
+                <span>Unggah SIP Baru (Terkunci)</span>
+            </button>
+        @endif
     </div>
 </div>
+
+<!-- Fondasi Hukum & Hard Constraint Alert -->
+@if(!$isStrValid)
+    <div class="card border-warning bg-warning-subtle mb-4 shadow-xs">
+        <div class="card-body p-4 d-flex align-items-start gap-3">
+            <div class="text-warning-emphasis fs-2">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <div>
+                <h5 class="fw-bold text-warning-emphasis mb-1">Modul Pengurusan SIP Terkunci (Syarat Mutlak Fondasi Hukum)</h5>
+                <p class="fs-sm text-dark mb-2">
+                    Berdasarkan tata kelola kredensial klinis RSUD dr. H. Moch. Ansari Saleh, pengurusan dan perpanjangan SIP <strong>hanya dapat aktif</strong> setelah data Master STR (16 digit) tervalidasi dengan pangkalan data <strong>SatuSehat SDMK Kemenkes RI</strong> dan berstatus <strong>terkunci (read-only)</strong> oleh Subkomite Kredensial.
+                </p>
+                <div class="p-2 bg-white rounded border d-inline-block fs-xs">
+                    <span class="text-muted">Status STR Anda saat ini:</span>
+                    {!! $dokter->status_verifikasi_str_badge !!}
+                    @if($dokter->nomor_str)
+                        <span class="ms-2 font-monospace fw-semibold text-dark">No. STR: {{ $dokter->nomor_str }}</span>
+                    @else
+                        <span class="ms-2 text-danger fw-semibold">Nomor STR belum diinput oleh Admin SDM</span>
+                    @endif
+                </div>
+                <div class="mt-2 text-muted fs-xs">
+                    <i class="fa-solid fa-circle-info me-1"></i> Jika Anda baru menyerahkan berkas e-STR, silakan menunggu Subkomite Kredensial Komite Medik memvalidasi data Anda.
+                </div>
+            </div>
+        </div>
+    </div>
+@else
+    <div class="alert alert-success border-success bg-light-teal d-flex align-items-center justify-content-between p-3 mb-4 shadow-2xs">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-shield-check text-success fs-3"></i>
+            <div>
+                <div class="fw-bold text-dark fs-sm">Fondasi Hukum Terpenuhi & STR Terkunci (Read-Only)</div>
+                <div class="fs-xs text-muted">
+                    No. Registrasi STR: <span class="font-monospace fw-bold text-dark">{{ chunk_split($dokter->nomor_str, 4, ' ') }}</span> &bullet;
+                    Tempat Praktik Terdaftar: <strong class="text-teal">{{ $dokter->tempat_praktik_label }}</strong> &bullet;
+                    Terverifikasi via SatuSehat SDMK
+                </div>
+            </div>
+        </div>
+        <span class="badge bg-success text-white"><i class="fa-solid fa-lock me-1"></i> STR Tervalidasi</span>
+    </div>
+@endif
 
 <div class="card shadow-xs">
     <div class="table-responsive">
@@ -58,8 +109,8 @@
                         </td>
                         <td>
                             @if($item->file_sip)
-                                <a href="{{ asset('storage/' . $item->file_sip) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat Berkas">
-                                    <i class="fa-solid fa-file-pdf"></i>
+                                <a href="{{ asset('storage/' . $item->file_sip) }}" target="_blank" class="btn btn-xs btn-outline-primary">
+                                    <i class="fa-solid fa-file-pdf me-1"></i> Unduh File
                                 </a>
                             @else
                                 <span class="text-muted fs-xs">-</span>
@@ -69,15 +120,17 @@
                 @empty
                     <tr>
                         <td colspan="7" class="text-center py-4 text-muted">
-                            Anda belum pernah mengajukan atau mengunggah berkas SIP.
+                            <i class="fa-solid fa-folder-open fs-2 mb-2 d-block"></i>
+                            Belum ada riwayat dokumen SIP yang diajukan.
                         </td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
+
     @if($sipList->hasPages())
-        <div class="card-footer bg-white py-3">
+        <div class="card-footer bg-white border-top p-3">
             {{ $sipList->links() }}
         </div>
     @endif

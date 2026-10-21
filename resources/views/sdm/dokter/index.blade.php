@@ -69,9 +69,10 @@
                 <tr>
                     <th>Dokter</th>
                     <th>NIP / NRP</th>
-                    <th>KSM</th>
-                    <th>Spesialisasi</th>
-                    <th>Kepegawaian</th>
+                    <th>KSM & Spesialisasi</th>
+                    <th>Nomor STR (16 Digit)</th>
+                    <th>Status Validasi STR</th>
+                    <th>Praktik RSUD</th>
                     <th>SIP Aktif</th>
                     <th class="text-end">Aksi</th>
                 </tr>
@@ -93,10 +94,40 @@
                                 </div>
                             </div>
                         </td>
-                        <td><span class="font-monospace fs-xs">{{ $dok->nip_nrp }}</span></td>
-                        <td><span class="badge bg-teal-subtle text-teal">{{ $dok->ksm->kode_ksm ?? '-' }}</span></td>
-                        <td>{{ $dok->spesialisasi }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ $dok->status_kepegawaian }}</span></td>
+                        <td>
+                            <span class="font-monospace fs-xs">{{ $dok->nip_nrp }}</span>
+                            <div><span class="badge bg-light text-dark border fs-2xs">{{ $dok->status_kepegawaian }}</span></div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark">{{ $dok->spesialisasi }}</div>
+                            <small class="text-teal fw-semibold">{{ $dok->ksm->nama_ksm ?? '-' }}</small>
+                            @if($dok->subspesialis)
+                                <div class="fs-xs text-muted">Sub: {{ $dok->subspesialis }}</div>
+                            @endif
+                        </td>
+                        <td>
+                            @if($dok->nomor_str)
+                                <div class="font-monospace fw-bold fs-xs text-dark">
+                                    {{ $dok->nomor_str }}
+                                    @if($dok->is_str_locked)
+                                        <i class="fa-solid fa-lock text-success ms-1" title="Terkunci (Read-Only)"></i>
+                                    @endif
+                                </div>
+                                <small class="text-muted fs-xs">
+                                    {{ $dok->status_str === 'seumur_hidup' ? 'Seumur Hidup' : 's.d ' . ($dok->tanggal_kadaluarsa_str ? $dok->tanggal_kadaluarsa_str->format('d/m/Y') : '-') }}
+                                </small>
+                            @else
+                                <span class="badge bg-danger-subtle text-danger">Belum Diinput</span>
+                            @endif
+                        </td>
+                        <td>
+                            {!! $dok->status_verifikasi_str_badge !!}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary border border-primary fs-xs">
+                                {{ $dok->tempat_praktik_label }}
+                            </span>
+                        </td>
                         <td>
                             @if($sip)
                                 @php $sisa = $sip->hitungSisaHari(); @endphp

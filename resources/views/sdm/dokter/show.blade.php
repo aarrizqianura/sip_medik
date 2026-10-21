@@ -28,12 +28,14 @@
     <!-- Doctor Biodata Card -->
     <div class="col-lg-4">
         <div class="card shadow-xs h-100">
-            <div class="card-header fw-bold text-dark">
-                <i class="fa-solid fa-id-card text-teal me-2"></i>
-                Informasi Kepegawaian & Kontak
+            <div class="card-header fw-bold text-dark d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-id-card text-teal me-2"></i>Informasi Kepegawaian & Kontak</span>
+                <span class="badge {{ $dokter->user->aktif ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                    {{ $dokter->user->aktif ? 'Akun Aktif' : 'Non-Aktif' }}
+                </span>
             </div>
             <div class="card-body">
-                <ul class="list-group list-group-flush fs-sm">
+                <ul class="list-group list-group-flush fs-sm mb-3">
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between">
                         <span class="text-muted">Username:</span>
                         <strong class="font-monospace text-dark">{{ $dokter->user->username }}</strong>
@@ -43,12 +45,6 @@
                         <span class="badge bg-light text-dark border">{{ $dokter->status_kepegawaian }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between">
-                        <span class="text-muted">Status STR:</span>
-                        <span class="badge {{ $dokter->status_str === 'seumur_hidup' ? 'bg-success' : 'bg-warning text-dark' }}">
-                            {{ $dokter->status_str === 'seumur_hidup' ? 'Seumur Hidup' : 'Berkala' }}
-                        </span>
-                    </li>
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between">
                         <span class="text-muted">Email:</span>
                         <span class="text-dark">{{ $dokter->user->email }}</span>
                     </li>
@@ -56,13 +52,73 @@
                         <span class="text-muted">No. WhatsApp:</span>
                         <span class="text-success fw-bold"><i class="fa-brands fa-whatsapp me-1"></i>{{ $dokter->user->no_wa }}</span>
                     </li>
-                    <li class="list-group-item px-0 py-2 d-flex justify-content-between">
-                        <span class="text-muted">Status Akun:</span>
-                        <span class="badge {{ $dokter->user->aktif ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
-                            {{ $dokter->user->aktif ? 'Aktif' : 'Non-Aktif' }}
-                        </span>
-                    </li>
                 </ul>
+
+                <!-- STR Master Data Card -->
+                <div class="p-3 bg-light rounded border">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-dark fs-xs text-uppercase">
+                            <i class="fa-solid fa-certificate text-teal me-1"></i>Master Data STR (16 Digit)
+                        </span>
+                        {!! $dokter->status_verifikasi_str_badge !!}
+                    </div>
+
+                    <div class="fs-sm mb-2">
+                        <div class="text-muted fs-xs">Nomor Registrasi:</div>
+                        @if($dokter->nomor_str)
+                            <div class="font-monospace fw-bold fs-6 text-dark">
+                                {{ chunk_split($dokter->nomor_str, 4, ' ') }}
+                                @if($dokter->is_str_locked)
+                                    <i class="fa-solid fa-lock text-success ms-1" title="Nomor STR Terkunci (Read-Only)"></i>
+                                @endif
+                            </div>
+                        @else
+                            <span class="text-danger fs-xs fw-semibold">Belum Direkam</span>
+                        @endif
+                    </div>
+
+                    <div class="fs-xs mb-2">
+                        <div class="text-muted">Deklarasi Praktik di RSUD Ansari Saleh:</div>
+                        <div class="fw-bold text-primary">{{ $dokter->tempat_praktik_label }}</div>
+                    </div>
+
+                    <div class="fs-xs mb-2">
+                        <div class="text-muted">Kualifikasi Subspesialis:</div>
+                        <div class="text-dark">{{ $dokter->subspesialis ?: '-' }}</div>
+                    </div>
+
+                    <div class="fs-xs mb-3">
+                        <div class="text-muted">Masa Berlaku STR:</div>
+                        <div class="fw-semibold text-dark">
+                            {{ $dokter->status_str === 'seumur_hidup' ? 'Seumur Hidup (UU No. 17/2023)' : 's.d ' . ($dokter->tanggal_kadaluarsa_str ? $dokter->tanggal_kadaluarsa_str->format('d/m/Y') : '-') }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        @if($dokter->file_str)
+                            <a href="{{ asset('storage/' . $dokter->file_str) }}" target="_blank" class="btn btn-xs btn-outline-primary">
+                                <i class="fa-solid fa-file-pdf me-1"></i> e-STR Digital
+                            </a>
+                        @else
+                            <span class="fs-xs text-muted">Belum ada file e-STR</span>
+                        @endif
+
+                        @if(in_array(auth()->user()->role, ['super_admin', 'verifikator_komite']))
+                            <a href="{{ route('komite.verifikasi_str.show', $dokter->id) }}" class="btn btn-xs btn-teal text-white">
+                                <i class="fa-solid fa-stamp me-1"></i> Telaah Kredensial
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Modul SIP Constraint Status -->
+                <div class="mt-3 p-2 rounded {{ $dokter->isStrValidDanTerkunci() ? 'bg-success-subtle text-success border border-success' : 'bg-warning-subtle text-warning-emphasis border border-warning' }} fs-xs d-flex align-items-center gap-2">
+                    <i class="fa-solid {{ $dokter->isStrValidDanTerkunci() ? 'fa-check-circle fs-5' : 'fa-lock fs-5' }}"></i>
+                    <div>
+                        <strong>Modul Pengurusan SIP:</strong>
+                        {{ $dokter->isStrValidDanTerkunci() ? 'AKTIF (Syarat mutlak STR terpenuhi)' : 'TERKUNCI (Menunggu verifikasi STR & SatuSehat SDMK)' }}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

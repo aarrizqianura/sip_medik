@@ -95,7 +95,13 @@
             @if(in_array($role, ['super_admin', 'verifikator_komite']))
                 <li class="nav-header text-uppercase text-teal-300 fs-xs fw-bold px-3 pt-3 pb-1">Komite Medik (Kredensial)</li>
                 <li class="nav-item">
-                    <a href="{{ route('komite.verifikasi.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'komite.verifikasi') ? 'active' : '' }}">
+                    <a href="{{ route('komite.verifikasi_str.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'komite.verifikasi_str') ? 'active' : '' }}">
+                        <i class="fa-solid fa-certificate me-2"></i>
+                        <span>Verifikasi STR (SatuSehat)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('komite.verifikasi.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'komite.verifikasi.') && !str_starts_with($currentRoute, 'komite.verifikasi_str') ? 'active' : '' }}">
                         <i class="fa-solid fa-stamp me-2"></i>
                         <span>Verifikasi Berkas SIP</span>
                     </a>

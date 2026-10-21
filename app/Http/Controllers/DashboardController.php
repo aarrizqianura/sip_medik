@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Services\SipMonitoringService;
+use App\Models\AuditLog;
+use App\Models\Dokter;
 use App\Models\DokumenSip;
 use App\Models\KredensialKlinis;
-use App\Models\Dokter;
-use App\Models\User;
 use App\Models\Ksm;
-use App\Models\AuditLog;
 use App\Models\Notifikasi;
+use App\Models\User;
+use App\Services\SipMonitoringService;
 
 class DashboardController extends Controller
 {
@@ -28,6 +27,7 @@ class DashboardController extends Controller
 
         if ($user->role === 'dokter') {
             $dokter = $user->dokter;
+            $isStrValid = $dokter ? $dokter->isStrValidDanTerkunci() : false;
             $sipList = $dokter ? $dokter->dokumenSip()->with('verifikator')->get() : collect();
             $sipAktif = $dokter ? $dokter->dokumenSip()->where('status_verifikasi', 'disetujui')->orderByDesc('tanggal_kadaluarsa')->first() : null;
             $kredensialList = $dokter ? $dokter->kredensialKlinis()->get() : collect();
@@ -37,6 +37,7 @@ class DashboardController extends Controller
             return view('dashboard.dokter', compact(
                 'user',
                 'dokter',
+                'isStrValid',
                 'sipList',
                 'sipAktif',
                 'kredensialList',
@@ -51,6 +52,15 @@ class DashboardController extends Controller
             ->orderBy('created_at')
             ->take(5)
             ->get();
+
+        $antreanStr = Dokter::with(['user', 'ksm'])
+            ->where('status_verifikasi_str', 'menunggu_verifikasi')
+            ->latest('updated_at')
+            ->take(5)
+            ->get();
+
+        $stats['strMenunggu'] = Dokter::where('status_verifikasi_str', 'menunggu_verifikasi')->count();
+        $stats['strTervalidasi'] = Dokter::where('status_verifikasi_str', 'tervalidasi')->count();
 
         $dokumenKritis = DokumenSip::with(['dokter.user', 'dokter.ksm'])
             ->where('status_verifikasi', 'disetujui')
@@ -67,10 +77,12 @@ class DashboardController extends Controller
 
         if ($user->role === 'super_admin') {
             $totalUser = User::count();
+
             return view('dashboard.super_admin', compact(
                 'stats',
                 'totalUser',
                 'antreanVerifikasi',
+                'antreanStr',
                 'dokumenKritis',
                 'auditTerbaru',
                 'ksmStatistik',
@@ -82,6 +94,7 @@ class DashboardController extends Controller
             return view('dashboard.admin_sdm', compact(
                 'stats',
                 'antreanVerifikasi',
+                'antreanStr',
                 'dokumenKritis',
                 'ksmStatistik',
                 'notifikasiTerbaru'
@@ -98,6 +111,7 @@ class DashboardController extends Controller
             return view('dashboard.verifikator', compact(
                 'stats',
                 'antreanVerifikasi',
+                'antreanStr',
                 'dokumenKritis',
                 'spkEvaluasi'
             ));

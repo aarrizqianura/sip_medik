@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Dokter;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SipRequest;
-use App\Models\DokumenSip;
 use App\Models\AuditLog;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Models\Dokter;
+use App\Models\DokumenSip;
 
 class PengajuanSipController extends Controller
 {
@@ -16,19 +15,32 @@ class PengajuanSipController extends Controller
         $user = auth()->user();
         $dokter = $user->dokter;
 
-        if (!$dokter) {
+        if (! $dokter) {
             return redirect()->route('dashboard')->with('error', 'Profil dokter tidak ditemukan untuk akun ini.');
         }
 
+        $isStrValid = $dokter->isStrValidDanTerkunci();
         $sipList = $dokter->dokumenSip()->with('verifikator')->orderByDesc('created_at')->paginate(10);
 
-        return view('dokter.pengajuan.index', compact('dokter', 'sipList'));
+        return view('dokter.pengajuan.index', compact('dokter', 'sipList', 'isStrValid'));
     }
 
     public function create()
     {
         $user = auth()->user();
         $dokter = $user->dokter;
+
+        if (! $dokter) {
+            return redirect()->route('dashboard')->with('error', 'Profil dokter tidak ditemukan.');
+        }
+
+        // Syarat Mutlak (Hard Constraint)
+        if (! $dokter->isStrValidDanTerkunci()) {
+            return redirect()->route('dokter.pengajuan.index')->with(
+                'error',
+                'Modul pengurusan SIP tidak aktif. Syarat mutlak: Nomor STR 16 digit dan profil dokter harus telah tervalidasi dan dikunci oleh Subkomite Kredensial Komite Medik via SatuSehat SDMK.'
+            );
+        }
 
         return view('dokter.pengajuan.create', compact('dokter'));
     }
@@ -38,14 +50,23 @@ class PengajuanSipController extends Controller
         $user = auth()->user();
         $dokter = $user->dokter;
 
-        if (!$dokter && !in_array($user->role, ['super_admin', 'admin_sdm'])) {
+        if (! $dokter && ! in_array($user->role, ['super_admin', 'admin_sdm'])) {
             return back()->with('error', 'Profil dokter tidak ditemukan.');
         }
 
         $idDokter = $dokter ? $dokter->id : $request->id_dokter;
+        $targetDokter = $dokter ?: Dokter::findOrFail($idDokter);
+
+        // Syarat Mutlak (Hard Constraint)
+        if (! $targetDokter->isStrValidDanTerkunci()) {
+            return redirect()->route('dokter.pengajuan.index')->with(
+                'error',
+                'Gagal mengajukan SIP! Syarat mutlak belum terpenuhi: Data STR dokter bersangkutan belum tervalidasi dan terkunci oleh Subkomite Kredensial Komite Medik.'
+            );
+        }
 
         $file = $request->file('file_sip');
-        $fileName = 'sip_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $fileName = 'sip_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
         $file->storeAs('sip', $fileName, 'public');
 
         $sip = DokumenSip::create([
@@ -56,7 +77,7 @@ class PengajuanSipController extends Controller
             'tanggal_kadaluarsa' => $request->tanggal_kadaluarsa,
             'status' => 'aktif',
             'status_verifikasi' => 'menunggu',
-            'file_sip' => 'sip/' . $fileName,
+            'file_sip' => 'sip/'.$fileName,
             'catatan_verifikasi' => null,
             'verified_by' => null,
             'verified_at' => null,

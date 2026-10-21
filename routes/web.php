@@ -1,19 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Dokter\PengajuanSipController;
+use App\Http\Controllers\Komite\KredensialController;
+use App\Http\Controllers\Komite\VerifikasiSipController;
+use App\Http\Controllers\Komite\VerifikasiStrController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\NotifikasiController;
-use App\Http\Controllers\SuperAdmin\UserController;
-use App\Http\Controllers\SuperAdmin\PengaturanController;
-use App\Http\Controllers\SuperAdmin\AuditLogController;
 use App\Http\Controllers\Sdm\DokterController;
 use App\Http\Controllers\Sdm\KsmController;
 use App\Http\Controllers\Sdm\ReminderController;
-use App\Http\Controllers\Komite\VerifikasiSipController;
-use App\Http\Controllers\Komite\KredensialController;
-use App\Http\Controllers\Dokter\PengajuanSipController;
+use App\Http\Controllers\SuperAdmin\AuditLogController;
+use App\Http\Controllers\SuperAdmin\PengaturanController;
+use App\Http\Controllers\SuperAdmin\UserController;
+use Illuminate\Support\Facades\Route;
 
 // Autentikasi
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login');
@@ -56,6 +57,14 @@ Route::middleware(['auth'])->group(function () {
 
     // 3. Role Verifikator Komite Medik (dan Super Admin)
     Route::middleware(['role:verifikator_komite,super_admin'])->prefix('komite')->name('komite.')->group(function () {
+        // Tahap 1: Verifikasi STR & SatuSehat SDMK
+        Route::get('verifikasi-str', [VerifikasiStrController::class, 'index'])->name('verifikasi_str.index');
+        Route::get('verifikasi-str/{dokter}', [VerifikasiStrController::class, 'show'])->name('verifikasi_str.show');
+        Route::post('verifikasi-str/{dokter}/periksa-satusehat', [VerifikasiStrController::class, 'periksaSatuSehat'])->name('verifikasi_str.satusehat');
+        Route::post('verifikasi-str/{dokter}/validasi', [VerifikasiStrController::class, 'validasi'])->name('verifikasi_str.validasi');
+        Route::post('verifikasi-str/{dokter}/unlock', [VerifikasiStrController::class, 'unlock'])->name('verifikasi_str.unlock');
+
+        // Verifikasi SIP
         Route::get('verifikasi', [VerifikasiSipController::class, 'index'])->name('verifikasi.index');
         Route::get('verifikasi/{id}', [VerifikasiSipController::class, 'show'])->name('verifikasi.show');
         Route::post('verifikasi/{id}/proses', [VerifikasiSipController::class, 'proses'])->name('verifikasi.proses');
