@@ -3,17 +3,19 @@
 @section('title', 'Master Data Staf Medis Dokter')
 
 @section('content')
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
-    <div>
-        <h4 class="fw-bold text-dark mb-1">Master Data Staf Medis Dokter</h4>
-        <p class="text-secondary fs-sm mb-0">Pengelolaan profil biodata dokter, NIP/NRP, KSM naungan, spesialisasi, dan status kepegawaian</p>
-    </div>
-    <div>
-        <a href="{{ route('sdm.dokter.create') }}" class="btn btn-teal text-white btn-sm d-flex align-items-center gap-2">
-            <i class="fa-solid fa-user-plus"></i>
-            <span>Tambah Dokter Baru</span>
-        </a>
-    </div>
+<div class="mb-4">
+    <h4 class="fw-bold text-dark mb-1">
+        <i class="fa-solid fa-user-doctor text-teal me-2"></i>Master Data Staf Medis Dokter
+    </h4>
+    <p class="text-secondary fs-sm mb-0">Pengelolaan profil biodata dokter, NIP/NRP, KSM naungan, kualifikasi klinis, dan perekaman data STR (16 digit) sebagai fondasi hukum</p>
+</div>
+
+<!-- Aksi Tambah Dokter (Diatas Kanan Posisi Filter) -->
+<div class="d-flex justify-content-end align-items-center mb-3">
+    <a href="{{ route('sdm.dokter.create') }}" id="btnTambahDokter" class="btn btn-teal text-white d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm fw-semibold">
+        <i class="fa-solid fa-user-plus"></i>
+        <span>Tambah Dokter</span>
+    </a>
 </div>
 
 <!-- Filter Toolbar -->

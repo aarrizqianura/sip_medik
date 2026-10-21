@@ -57,8 +57,34 @@
             background-color: #ccfbf1 !important;
         }
 
-        .border-teal-light {
-            border-color: rgba(255, 255, 255, 0.12) !important;
+        .btn-teal {
+            background-color: var(--primary-teal) !important;
+            border-color: var(--primary-teal) !important;
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .btn-teal:hover, .btn-teal:focus, .btn-teal:active {
+            background-color: var(--primary-dark-teal) !important;
+            border-color: var(--primary-dark-teal) !important;
+            color: #ffffff !important;
+        }
+
+        .btn-outline-teal {
+            color: var(--primary-teal) !important;
+            border-color: var(--primary-teal) !important;
+            background-color: transparent !important;
+            font-weight: 600;
+        }
+
+        .btn-outline-teal:hover, .btn-outline-teal:focus, .btn-outline-teal:active {
+            color: #ffffff !important;
+            background-color: var(--primary-teal) !important;
+            border-color: var(--primary-teal) !important;
+        }
+
+        .bg-light-teal {
+            background-color: #f0fdfa !important;
         }
 
         .fs-xs {

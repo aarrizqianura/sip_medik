@@ -1,14 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Dokter & Perekaman Data STR')
+@section('title', 'Tambah Dokter - Perekaman Master Data STR')
 
 @section('content')
 <div class="mb-4">
     <a href="{{ route('sdm.dokter.index') }}" class="btn btn-light btn-sm border mb-2">
-        <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Daftar Dokter
+        <i class="fa-solid fa-arrow-left me-1"></i> Kembali ke Master Data Dokter
     </a>
-    <h4 class="fw-bold text-dark mb-1">Perekaman Master Data STR & Profil Dokter</h4>
-    <p class="text-secondary fs-sm mb-0">Tahap 1: Pencatatan identitas, kualifikasi klinis, nomor registrasi STR 16 digit, deklarasi tempat praktik di RSUD Ansari Saleh, dan salinan e-STR</p>
+    <h4 class="fw-bold text-dark mb-1">
+        <i class="fa-solid fa-user-plus text-teal me-2"></i>Tambah Dokter: Perekaman Master Data STR & Profil
+    </h4>
+    <p class="text-secondary fs-sm mb-0">Tahap 1: Pencatatan identitas kepegawaian, kualifikasi klinis, nomor registrasi STR 16 digit, deklarasi tempat praktik di RSUD Ansari Saleh, dan salinan digital e-STR</p>
 </div>
 
 <div class="card shadow-xs">

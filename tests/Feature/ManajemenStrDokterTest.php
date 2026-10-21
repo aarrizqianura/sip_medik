@@ -27,6 +27,27 @@ class ManajemenStrDokterTest extends TestCase
     }
 
     /**
+     * Tombol dan halaman perekaman STR & dokter baru tersedia dan dapat diakses oleh SDM
+     */
+    public function test_halaman_dan_tombol_perekaman_str_tersedia_untuk_sdm(): void
+    {
+        // 1. Tombol "Tambah Dokter" tersedia di halaman index master data dokter
+        $responseIndex = $this->actingAs($this->adminSdm)->get(route('sdm.dokter.index'));
+        $responseIndex->assertStatus(200);
+        $responseIndex->assertSee(route('sdm.dokter.create'));
+        $responseIndex->assertSee('Tambah Dokter');
+
+        // 2. Akses ke halaman perekaman STR & profil dokter dibuka melalui tombol Tambah Dokter
+        $responseCreate = $this->actingAs($this->adminSdm)->get(route('sdm.dokter.create'));
+        $responseCreate->assertStatus(200);
+        $responseCreate->assertSee('Tambah Dokter: Perekaman Master Data STR');
+        $responseCreate->assertSee('Nomor Registrasi STR (16 Digit)');
+        $responseCreate->assertSee('Deklarasi Tempat Praktik di RSUD Ansari Saleh');
+        $responseCreate->assertSee('Unggah Salinan Digital e-STR Resmi');
+        $responseCreate->assertSee('Simpan Master Data');
+    }
+
+    /**
      * Admin SDM dapat mendaftarkan dokter baru lengkap dengan nomor STR 16 digit, subspesialis, deklarasi praktik, dan salinan e-STR
      */
     public function test_sdm_dapat_mendaftarkan_dokter_baru_dengan_data_dan_berkas_str(): void
