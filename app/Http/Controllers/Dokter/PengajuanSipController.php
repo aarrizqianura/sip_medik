@@ -87,6 +87,8 @@ class PengajuanSipController extends Controller
             'status_kecukupan_skp' => $request->boolean('status_kecukupan_skp'),
             'nomor_rekomendasi_skp' => $request->input('nomor_rekomendasi_skp'),
             'file_rekomendasi_skp' => $fileSkpPath,
+            'permohonan_kewenangan_baru' => $request->boolean('permohonan_kewenangan_baru'),
+            'catatan_kewenangan_baru' => $request->input('catatan_kewenangan_baru'),
             'tanggal_terbit' => $request->tanggal_terbit,
             'tanggal_kadaluarsa' => $request->tanggal_kadaluarsa,
             'status' => 'aktif',

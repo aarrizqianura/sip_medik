@@ -108,6 +108,8 @@ class SipMonitoringService
         $kredensialAktif = KredensialKlinis::where('status_kredensial', 'aktif')->count();
         $kredensialEvaluasi = KredensialKlinis::where('status_kredensial', 'evaluasi')->count();
         $kredensialKadaluarsa = KredensialKlinis::where('status_kredensial', 'kedaluwarsa')->count();
+        $kredensialProsesRekredensial = KredensialKlinis::whereIn('status_kredensial', ['proses_rekredensial', 'sidang_komite'])->count();
+        $kredensialRekomendasiTerbit = KredensialKlinis::where('status_kredensial', 'rekomendasi_terbit')->count();
 
         return compact(
             'totalDokter',
@@ -120,7 +122,9 @@ class SipMonitoringService
             'sipDitolak',
             'kredensialAktif',
             'kredensialEvaluasi',
-            'kredensialKadaluarsa'
+            'kredensialKadaluarsa',
+            'kredensialProsesRekredensial',
+            'kredensialRekomendasiTerbit'
         );
     }
 }

@@ -64,10 +64,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('verifikasi-str/{dokter}/validasi', [VerifikasiStrController::class, 'validasi'])->name('verifikasi_str.validasi');
         Route::post('verifikasi-str/{dokter}/unlock', [VerifikasiStrController::class, 'unlock'])->name('verifikasi_str.unlock');
 
-        // Verifikasi SIP
+        // Verifikasi SIP (Tahap 3 Pemeriksaan Dokumen)
         Route::get('verifikasi', [VerifikasiSipController::class, 'index'])->name('verifikasi.index');
         Route::get('verifikasi/{id}', [VerifikasiSipController::class, 'show'])->name('verifikasi.show');
         Route::post('verifikasi/{id}/proses', [VerifikasiSipController::class, 'proses'])->name('verifikasi.proses');
+
+        // Rekredensialing & Sidang Mitra Bestari & RKK (Tahap 3)
+        Route::get('kredensial/{kredensial}/sidang', [KredensialController::class, 'sidang'])->name('kredensial.sidang');
+        Route::post('kredensial/{kredensial}/sidang', [KredensialController::class, 'simpanSidang'])->name('kredensial.simpan_sidang');
+        Route::post('kredensial/{kredensial}/terbitkan-rekomendasi', [KredensialController::class, 'terbitkanRekomendasi'])->name('kredensial.terbitkan_rekomendasi');
+        Route::get('kredensial/{kredensial}/surat-rekomendasi', [KredensialController::class, 'suratRekomendasi'])->name('kredensial.surat_rekomendasi');
+        Route::post('kredensial/{kredensial}/sahkan-spk', [KredensialController::class, 'sahkanSpk'])->name('kredensial.sahkan_spk');
         Route::resource('kredensial', KredensialController::class);
     });
 

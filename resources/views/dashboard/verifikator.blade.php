@@ -20,6 +20,23 @@
     </div>
 </div>
 
+@if(($stats['kredensialProsesRekredensial'] ?? 0) > 0)
+    <div class="alert alert-warning border-warning shadow-xs d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-warning text-dark p-2 rounded-circle fs-4 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                <i class="fa-solid fa-gavel"></i>
+            </div>
+            <div>
+                <strong class="text-dark">Terdapat {{ $stats['kredensialProsesRekredensial'] }} Dokter dalam Status Proses Rekredensial</strong>
+                <div class="fs-xs text-secondary">Berkas SIP telah disahkan dan siklus SPK/RKK 3 tahunan dokter memerlukan Sidang Kredensial & penetapan RKK bersama Mitra Bestari (Peer Group).</div>
+            </div>
+        </div>
+        <a href="{{ route('komite.kredensial.index', ['status_kredensial' => 'proses_rekredensial']) }}" class="btn btn-warning text-dark btn-sm fw-semibold shadow-xs">
+            <i class="fa-solid fa-list-check me-1"></i> Buka Antrean Sidang Kredensial
+        </a>
+    </div>
+@endif
+
 <!-- Key Stat Cards -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">

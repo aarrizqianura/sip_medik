@@ -232,6 +232,22 @@
                     @error('tanggal_kadaluarsa') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
             </div>
+
+            <!-- Permohonan Penambahan Kewenangan Klinis Baru (Tahap 3 Pemicu Rekredensialing) -->
+            <div class="mt-4 p-3 bg-light rounded-3 border">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="permohonan_kewenangan_baru" id="permohonanKewenanganBaru" value="1" {{ old('permohonan_kewenangan_baru') ? 'checked' : '' }} onchange="document.getElementById('boxCatatanKewenanganDokter').classList.toggle('d-none', !this.checked)">
+                    <label class="form-check-label fw-bold text-dark fs-sm" for="permohonanKewenanganBaru">
+                        <i class="fa-solid fa-plus-circle text-teal me-1"></i> Saya mengajukan permohonan penambahan Rincian Kewenangan Klinis (RKK) baru
+                    </label>
+                </div>
+                <p class="fs-xs text-muted mb-0 ps-4 mt-1">
+                    Centang opsi ini apabila Anda telah menyelesaikan pelatihan / fellowship tambahan dan mengajukan tindakan medis baru untuk disidangkan oleh Subkomite Kredensial bersama Mitra Bestari.
+                </p>
+                <div id="boxCatatanKewenanganDokter" class="ps-4 mt-2 {{ old('permohonan_kewenangan_baru') ? '' : 'd-none' }}">
+                    <textarea name="catatan_kewenangan_baru" rows="2" class="form-control fs-xs" placeholder="Tuliskan daftar prosedur / kewenangan klinis baru yang diajukan beserta sertifikat pendukung...">{{ old('catatan_kewenangan_baru') }}</textarea>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -27,6 +27,8 @@ class SipRequest extends FormRequest
             'file_rekomendasi_skp' => 'nullable|file|mimes:pdf|max:2048',
             'tanggal_terbit' => 'required|date',
             'tanggal_kadaluarsa' => 'required|date|after:tanggal_terbit',
+            'permohonan_kewenangan_baru' => 'nullable|boolean',
+            'catatan_kewenangan_baru' => 'nullable|string|max:1000',
             'file_sip' => $fileRules,
         ];
     }

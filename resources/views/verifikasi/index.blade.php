@@ -72,6 +72,18 @@
                             @else
                                 <span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Ditolak</span>
                             @endif
+
+                            @if($item->permohonan_kewenangan_baru)
+                                <div class="mt-1">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary fs-3xs"><i class="fa-solid fa-plus-circle me-1"></i> Usul Kewenangan Baru</span>
+                                </div>
+                            @endif
+
+                            @if($item->status_verifikasi === 'ditolak' && $item->catatan_verifikasi)
+                                <div class="fs-3xs text-danger text-truncate mt-1" style="max-width: 180px;" title="{{ $item->catatan_verifikasi }}">
+                                    <i class="fa-solid fa-note-sticky"></i> {{ $item->catatan_verifikasi }}
+                                </div>
+                            @endif
                         </td>
                         <td>
                             @if($item->verifikator)
@@ -82,9 +94,9 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('komite.verifikasi.show', $item->id) }}" class="btn btn-sm {{ $item->status_verifikasi === 'menunggu' ? 'btn-teal text-white' : 'btn-outline-secondary' }}">
+                            <a href="{{ route('komite.verifikasi.show', $item->id) }}" class="btn btn-sm {{ $item->status_verifikasi === 'menunggu' ? 'btn-teal text-white fw-semibold' : 'btn-outline-secondary' }}">
                                 <i class="fa-solid fa-clipboard-check me-1"></i>
-                                {{ $item->status_verifikasi === 'menunggu' ? 'Telaah Berkas' : 'Lihat Detail' }}
+                                {{ $item->status_verifikasi === 'menunggu' ? 'Telaah Berkas' : 'Lihat Telaah' }}
                             </a>
                         </td>
                     </tr>

@@ -30,6 +30,11 @@ class DokumenSip extends Model
         'status_verifikasi',
         'file_sip',
         'catatan_verifikasi',
+        'permohonan_kewenangan_baru',
+        'catatan_kewenangan_baru',
+        'checklist_keabsahan_fasyankes',
+        'checklist_masa_berlaku',
+        'checklist_keterbacaan_pindaian',
         'verified_by',
         'verified_at',
     ];
@@ -40,6 +45,10 @@ class DokumenSip extends Model
         'verified_at' => 'datetime',
         'tempat_praktik_ke' => 'integer',
         'status_kecukupan_skp' => 'boolean',
+        'permohonan_kewenangan_baru' => 'boolean',
+        'checklist_keabsahan_fasyankes' => 'boolean',
+        'checklist_masa_berlaku' => 'boolean',
+        'checklist_keterbacaan_pindaian' => 'boolean',
     ];
 
     public function dokter(): BelongsTo

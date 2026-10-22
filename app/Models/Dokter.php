@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -78,7 +79,75 @@ class Dokter extends Model
 
     public function spkTerbaru(): HasOne
     {
-        return $this->hasOne(KredensialKlinis::class, 'id_dokter')->latestOfMany('tanggal_berakhir_spk');
+        return $this->hasOne(KredensialKlinis::class, 'id_dokter')->latestOfMany('id');
+    }
+
+    public function kredensialTerbaru(): HasOne
+    {
+        return $this->hasOne(KredensialKlinis::class, 'id_dokter')->latestOfMany('id');
+    }
+
+    /**
+     * Pemicu Alur Rekredensialing Otomatis:
+     * Mengecek apakah masa berlaku SPK/RKK melampaui siklus evaluasi (3 tahun)
+     * atau ada permohonan penambahan kewenangan klinis baru.
+     *
+     * @return array{perlu: bool, alasan: string, jenis: string}
+     */
+    public function evaluasiStatusRekredensial(bool $permohonanBaru = false): array
+    {
+        if ($permohonanBaru) {
+            return [
+                'perlu' => true,
+                'alasan' => 'Terdapat permohonan penambahan rincian kewenangan klinis baru dari dokter.',
+                'jenis' => 'penambahan_kewenangan',
+            ];
+        }
+
+        $spk = $this->kredensialTerbaru ?: $this->spkTerbaru;
+
+        if (! $spk) {
+            return [
+                'perlu' => true,
+                'alasan' => 'Dokter belum memiliki instrumen Surat Penugasan Klinis (SPK) & RKK terdaftar di sistem.',
+                'jenis' => 'kredensial_baru',
+            ];
+        }
+
+        if ($spk->status_kredensial === 'proses_rekredensial') {
+            return [
+                'perlu' => true,
+                'alasan' => 'Dokter saat ini masih dalam proses alur rekredensialing (menunggu sidang/rekomendasi).',
+                'jenis' => $spk->jenis_pengajuan ?: 'rekredensial_berkala',
+            ];
+        }
+
+        $sisaHari = $spk->hitungSisaHari();
+        $siklusTahun = $spk->tanggal_terbit_spk ? Carbon::parse($spk->tanggal_terbit_spk)->diffInYears(Carbon::today()) : 0;
+
+        // Jika telah melampaui masa berlaku (kadaluarsa) atau siklus 3 tahun terlampaui
+        if ($sisaHari <= 0 || $siklusTahun >= 3 || $spk->status_kredensial === 'kedaluwarsa') {
+            return [
+                'perlu' => true,
+                'alasan' => 'Masa berlaku instrumen SPK/RKK telah melampaui siklus evaluasi 3 tahun (Kadaluarsa sejak '.($spk->tanggal_berakhir_spk ? $spk->tanggal_berakhir_spk->format('d/m/Y') : '-').').',
+                'jenis' => 'rekredensial_berkala',
+            ];
+        }
+
+        // Jika dalam masa evaluasi berkala 90 hari sebelum habis
+        if ($sisaHari <= 90 || $spk->status_kredensial === 'evaluasi') {
+            return [
+                'perlu' => true,
+                'alasan' => "Instrumen SPK/RKK mendekati batas akhir siklus evaluasi 3 tahun (tersisa {$sisaHari} hari).",
+                'jenis' => 'rekredensial_berkala',
+            ];
+        }
+
+        return [
+            'perlu' => false,
+            'alasan' => 'Instrumen SPK & RKK masih aktif absah dalam siklus 3 tahun.',
+            'jenis' => 'aktif',
+        ];
     }
 
     /**
