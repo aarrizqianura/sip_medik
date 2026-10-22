@@ -34,9 +34,10 @@ class KredensialKlinis extends Model
 
     public function hitungSisaHari(): int
     {
-        if (!$this->tanggal_berakhir_spk) {
+        if (! $this->tanggal_berakhir_spk) {
             return 0;
         }
+
         return (int) Carbon::today()->diffInDays(Carbon::parse($this->tanggal_berakhir_spk), false);
     }
 
@@ -53,6 +54,7 @@ class KredensialKlinis extends Model
         }
 
         $this->save();
+
         return $this->status_kredensial;
     }
 

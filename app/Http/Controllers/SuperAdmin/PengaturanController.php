@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\PengaturanSistem;
 use App\Models\AuditLog;
+use App\Models\PengaturanSistem;
 use App\Services\SipMonitoringService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class PengaturanController extends Controller
@@ -55,12 +55,13 @@ class PengaturanController extends Controller
 
             if ($response->successful()) {
                 AuditLog::record('TEST_WA_GATEWAY', 'WhatsApp Gateway', "Kirim tes WA berhasil ke nomor {$request->no_wa}");
+
                 return back()->with('sukses', "Pengujian kirim pesan WhatsApp ke {$request->no_wa} berhasil!");
             } else {
-                return back()->with('error', "Respon Vendor WA Gateway: " . $response->body());
+                return back()->with('error', 'Respon Vendor WA Gateway: '.$response->body());
             }
         } catch (\Exception $e) {
-            return back()->with('error', "Gagal terhubung ke gateway WhatsApp: " . $e->getMessage());
+            return back()->with('error', 'Gagal terhubung ke gateway WhatsApp: '.$e->getMessage());
         }
     }
 

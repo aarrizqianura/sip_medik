@@ -11,20 +11,21 @@ class RoleMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      * @param  string  ...$roles
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return redirect()->route('login');
         }
 
         $user = auth()->user();
 
         // Cek akun aktif
-        if (!$user->aktif) {
+        if (! $user->aktif) {
             auth()->logout();
+
             return redirect()->route('login')->withErrors(['username' => 'Akun Anda telah dinonaktifkan oleh Administrator.']);
         }
 
@@ -33,7 +34,7 @@ class RoleMiddleware
             return $next($request);
         }
 
-        if (!in_array($user->role, $roles)) {
+        if (! in_array($user->role, $roles)) {
             abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengakses halaman ini.');
         }
 

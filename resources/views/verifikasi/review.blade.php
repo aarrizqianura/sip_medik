@@ -94,19 +94,46 @@
                     </tr>
                     <tr><td colspan="2"><hr class="my-1"></td></tr>
                     <tr>
-                        <td class="text-muted">Nomor SIP</td>
+                        <td class="text-muted">Nomor Izin SIP</td>
                         <td class="fw-bold text-dark font-monospace">: {{ $sip->nomor_sip }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Penerbit Izin</td>
+                        <td>: {{ $sip->penerbit_sip ?: 'DPMPTSP Kota Banjarmasin' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Fasyankes Tujuan</td>
+                        <td>
+                            : <span class="fw-bold text-dark">{{ $sip->fasyankes ?: 'RSUD dr. H. Moch. Ansari Saleh' }}</span>
+                            <span class="badge bg-success-subtle text-success border border-success ms-1 fs-2xs"><i class="fa-solid fa-circle-check"></i> Sesuai Alamat</span>
+                        </td>
                     </tr>
                     <tr>
                         <td class="text-muted">Tempat Praktik</td>
                         <td>: SIP Ke-{{ $sip->tempat_praktik_ke }}</td>
                     </tr>
                     <tr>
+                        <td class="text-muted">Prasyarat SKP</td>
+                        <td>
+                            : {!! $sip->status_kecukupan_skp_badge !!}
+                            @if($sip->nomor_rekomendasi_skp)
+                                <div class="fs-xs font-monospace text-secondary mt-1">No: {{ $sip->nomor_rekomendasi_skp }}</div>
+                            @endif
+                            @if($sip->file_rekomendasi_skp)
+                                <div class="mt-1">
+                                    <a href="{{ asset('storage/' . $sip->file_rekomendasi_skp) }}" target="_blank" class="btn btn-2xs btn-outline-teal text-teal">
+                                        <i class="fa-solid fa-file-pdf me-1"></i> Surat Rekomendasi SKP SatuSehat
+                                    </a>
+                                </div>
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
                         <td class="text-muted">Tanggal Terbit</td>
                         <td>: {{ $sip->tanggal_terbit ? $sip->tanggal_terbit->translatedFormat('d F Y') : '-' }}</td>
                     </tr>
                     <tr>
-                        <td class="text-muted">Tanggal Jatuh Tempo</td>
+                        <td class="text-muted">Jatuh Tempo (5 Thn)</td>
                         <td class="fw-bold text-danger">: {{ $sip->tanggal_kadaluarsa ? $sip->tanggal_kadaluarsa->translatedFormat('d F Y') : '-' }}</td>
                     </tr>
                 </table>

@@ -163,11 +163,12 @@
             <thead class="table-light">
                 <tr>
                     <th>Tgl Pengajuan</th>
-                    <th>Nomor SIP</th>
-                    <th>Tempat Ke</th>
+                    <th>Nomor Izin SIP</th>
+                    <th>Fasyankes & Praktik</th>
+                    <th>Prasyarat SKP</th>
                     <th>Masa Berlaku</th>
-                    <th>Status Verifikasi</th>
-                    <th>Catatan Telaah Komite</th>
+                    <th>Status Antrean</th>
+                    <th>Catatan Telaah</th>
                     <th>Berkas</th>
                 </tr>
             </thead>
@@ -175,8 +176,24 @@
                 @forelse($sipList as $item)
                     <tr>
                         <td>{{ $item->created_at->format('d/m/Y') }}</td>
-                        <td class="fw-semibold"><span class="font-monospace fs-xs">{{ $item->nomor_sip }}</span></td>
-                        <td>SIP Ke-{{ $item->tempat_praktik_ke }}</td>
+                        <td>
+                            <span class="font-monospace fw-semibold fs-xs">{{ $item->nomor_sip }}</span>
+                            <div class="text-muted fs-2xs">{{ $item->penerbit_sip ?: 'DPMPTSP' }}</div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-dark fs-xs">{{ $item->fasyankes ?: 'RSUD dr. H. Moch. Ansari Saleh' }}</div>
+                            <span class="badge bg-light text-secondary border fs-2xs">SIP Ke-{{ $item->tempat_praktik_ke }}</span>
+                        </td>
+                        <td>
+                            {!! $item->status_kecukupan_skp_badge !!}
+                            @if($item->file_rekomendasi_skp)
+                                <div class="mt-1">
+                                    <a href="{{ asset('storage/' . $item->file_rekomendasi_skp) }}" target="_blank" class="btn btn-2xs btn-outline-teal text-teal" title="Rekomendasi SKP SatuSehat">
+                                        <i class="fa-solid fa-file-pdf"></i> Rekomendasi
+                                    </a>
+                                </div>
+                            @endif
+                        </td>
                         <td>
                             <div>{{ $item->tanggal_terbit ? $item->tanggal_terbit->format('d/m/Y') : '-' }} s.d</div>
                             <small class="fw-bold text-dark">{{ $item->tanggal_kadaluarsa ? $item->tanggal_kadaluarsa->format('d/m/Y') : '-' }}</small>
@@ -187,7 +204,7 @@
                             @elseif($item->status_verifikasi === 'ditolak')
                                 <span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Ditolak</span>
                             @else
-                                <span class="badge bg-warning-subtle text-warning border border-warning"><i class="fa-solid fa-clock me-1"></i> Menunggu Telaah</span>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-hourglass-half me-1"></i> Menunggu Verifikasi</span>
                             @endif
                         </td>
                         <td>
@@ -199,7 +216,7 @@
                         </td>
                         <td>
                             @if($item->file_sip)
-                                <a href="{{ asset('storage/' . $item->file_sip) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat Berkas">
+                                <a href="{{ asset('storage/' . $item->file_sip) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat Berkas Lembar SIP">
                                     <i class="fa-solid fa-file-pdf"></i>
                                 </a>
                             @else
@@ -209,7 +226,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">
+                        <td colspan="8" class="text-center py-4 text-muted">
                             Belum ada dokumen SIP yang diunggah.
                         </td>
                     </tr>

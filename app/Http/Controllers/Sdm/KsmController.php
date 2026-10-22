@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Sdm;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ksm;
 use App\Models\AuditLog;
+use App\Models\Ksm;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +18,7 @@ class KsmController extends Controller
             $cari = $request->cari;
             $query->where(function ($q) use ($cari) {
                 $q->where('kode_ksm', 'like', "%{$cari}%")
-                  ->orWhere('nama_ksm', 'like', "%{$cari}%");
+                    ->orWhere('nama_ksm', 'like', "%{$cari}%");
             });
         }
 

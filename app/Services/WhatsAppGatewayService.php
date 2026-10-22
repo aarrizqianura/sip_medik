@@ -16,7 +16,7 @@ class WhatsAppGatewayService
     public function kirimPeringatan(DokumenSip $sip, ?string $customPesan = null): array
     {
         $dokter = $sip->dokter;
-        if (!$dokter || !$dokter->user) {
+        if (! $dokter || ! $dokter->user) {
             return ['status' => false, 'message' => 'Dokter atau akun user tidak ditemukan.'];
         }
 
@@ -29,14 +29,14 @@ class WhatsAppGatewayService
             $pesan = $customPesan;
         } else {
             if ($selisih < 0) {
-                $statusTeks = "TELAH KEDALUWARSA (" . abs($selisih) . " hari yang lalu)";
-                $himbauan = "Sesuai regulasi Pokja KPS dan Komite Medik, Anda dihimbau untuk *segera menghentikan pelayanan klinis mandiri* sampai penerbitan SIP baru disahkan.";
+                $statusTeks = 'TELAH KEDALUWARSA ('.abs($selisih).' hari yang lalu)';
+                $himbauan = 'Sesuai regulasi Pokja KPS dan Komite Medik, Anda dihimbau untuk *segera menghentikan pelayanan klinis mandiri* sampai penerbitan SIP baru disahkan.';
             } elseif ($selisih <= 30) {
                 $statusTeks = "KRITIS (Sisa {$selisih} hari lagi)";
-                $himbauan = "Mohon segera menindaklanjuti proses perpanjangan di DPMPTSP dan mengunggah berkas SIP baru ke sistem.";
+                $himbauan = 'Mohon segera menindaklanjuti proses perpanjangan di DPMPTSP dan mengunggah berkas SIP baru ke sistem.';
             } else {
                 $statusTeks = "Sisa {$selisih} hari lagi";
-                $himbauan = "Mohon mempersiapkan berkas persyaratan perpanjangan SIP Anda.";
+                $himbauan = 'Mohon mempersiapkan berkas persyaratan perpanjangan SIP Anda.';
             }
 
             $pesan = "🔔 *PENGINGAT MASA BERLAKU SIP DOKTER*\n";
@@ -49,8 +49,8 @@ class WhatsAppGatewayService
             $pesan .= "• Jatuh Tempo: *{$tglKadaluarsa}*\n";
             $pesan .= "• Status: *{$statusTeks}*\n\n";
             $pesan .= "{$himbauan}\n\n";
-            $pesan .= "Akses Portal SIM-SIP:\n" . config('app.url') . "\n\n";
-            $pesan .= "_Pesan otomatis Komite Medik & Bagian SDM Kepegawaian RSUD dr. H. Moch. Ansari Saleh_";
+            $pesan .= "Akses Portal SIM-SIP:\n".config('app.url')."\n\n";
+            $pesan .= '_Pesan otomatis Komite Medik & Bagian SDM Kepegawaian RSUD dr. H. Moch. Ansari Saleh_';
         }
 
         $apiUrl = PengaturanSistem::get('wa_api_url', config('services.wa_gateway.endpoint', 'https://api.fonnte.com/send'));
@@ -59,7 +59,7 @@ class WhatsAppGatewayService
         $sukses = false;
         $responseInfo = 'Mock / Offline';
 
-        if (!empty($apiUrl) && !empty($apiToken) && !empty($noWa)) {
+        if (! empty($apiUrl) && ! empty($apiToken) && ! empty($noWa)) {
             try {
                 $response = Http::timeout(10)->withHeaders([
                     'Authorization' => $apiToken,
@@ -71,7 +71,7 @@ class WhatsAppGatewayService
                 $sukses = $response->successful();
                 $responseInfo = $response->body();
             } catch (\Exception $e) {
-                Log::error("Gagal kirim WA ke {$noWa}: " . $e->getMessage());
+                Log::error("Gagal kirim WA ke {$noWa}: ".$e->getMessage());
                 $responseInfo = $e->getMessage();
             }
         } else {

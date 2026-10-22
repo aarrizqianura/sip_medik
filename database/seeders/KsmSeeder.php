@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Ksm;
+use Illuminate\Database\Seeder;
 
 class KsmSeeder extends Seeder
 {

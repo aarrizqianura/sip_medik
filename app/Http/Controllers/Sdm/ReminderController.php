@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Sdm;
 
 use App\Http\Controllers\Controller;
-use App\Models\DokumenSip;
 use App\Models\AuditLog;
+use App\Models\DokumenSip;
 use App\Services\WhatsAppGatewayService;
 use Illuminate\Http\Request;
 
@@ -33,10 +33,10 @@ class ReminderController extends Controller
             $cari = $request->cari;
             $query->where(function ($q) use ($cari) {
                 $q->where('nomor_sip', 'like', "%{$cari}%")
-                  ->orWhereHas('dokter.user', function ($qu) use ($cari) {
-                      $qu->where('nama', 'like', "%{$cari}%")
-                        ->orWhere('no_wa', 'like', "%{$cari}%");
-                  });
+                    ->orWhereHas('dokter.user', function ($qu) use ($cari) {
+                        $qu->where('nama', 'like', "%{$cari}%")
+                            ->orWhere('no_wa', 'like', "%{$cari}%");
+                    });
             });
         }
 

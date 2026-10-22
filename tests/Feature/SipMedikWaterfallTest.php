@@ -2,23 +2,25 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\Dokter;
 use App\Models\DokumenSip;
-use App\Models\Ksm;
 use App\Models\Notifikasi;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class SipMedikWaterfallTest extends TestCase
 {
     protected User $superAdmin;
+
     protected User $adminSdm;
+
     protected User $verifikator;
+
     protected User $dokterUser;
+
     protected Dokter $dokter;
 
     protected function setUp(): void
@@ -71,14 +73,18 @@ class SipMedikWaterfallTest extends TestCase
         $response = $this->actingAs($this->dokterUser)->post('/dokter/pengajuan-sip', [
             'nomor_sip' => '446/TEST-SIP/DPMPTSP/2026',
             'tempat_praktik_ke' => 1,
+            'fasyankes' => 'RSUD dr. H. Moch. Ansari Saleh',
+            'status_kecukupan_skp' => true,
             'tanggal_terbit' => Carbon::now()->toDateString(),
-            'tanggal_kadaluarsa' => Carbon::now()->addYears(3)->toDateString(),
+            'tanggal_kadaluarsa' => Carbon::now()->addYears(5)->toDateString(),
             'file_sip' => $file,
         ]);
 
         $response->assertRedirect(route('dokter.pengajuan.index'));
         $this->assertDatabaseHas('dokumen_sip', [
             'nomor_sip' => '446/TEST-SIP/DPMPTSP/2026',
+            'fasyankes' => 'RSUD dr. H. Moch. Ansari Saleh',
+            'status_kecukupan_skp' => true,
             'status_verifikasi' => 'menunggu',
         ]);
     }
@@ -109,7 +115,7 @@ class SipMedikWaterfallTest extends TestCase
     public function test_case_5_telaah_berkas_komite_tolak(): void
     {
         $sipPending = DokumenSip::where('status_verifikasi', 'menunggu')->first();
-        if (!$sipPending) {
+        if (! $sipPending) {
             $sipPending = DokumenSip::create([
                 'id_dokter' => $this->dokter->id,
                 'nomor_sip' => '446/TEST-TOLAK/2026',

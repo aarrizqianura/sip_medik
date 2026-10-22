@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\AuditLog;
 
 class LoginController extends Controller
 {
@@ -14,6 +14,7 @@ class LoginController extends Controller
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
+
         return view('auth.login');
     }
 
@@ -37,8 +38,9 @@ class LoginController extends Controller
         if (Auth::attempt($authAttempt, $request->boolean('remember'))) {
             $user = Auth::user();
 
-            if (!$user->aktif) {
+            if (! $user->aktif) {
                 Auth::logout();
+
                 return back()->withErrors(['username' => 'Akun dinonaktifkan. Silakan hubungi Administrator IT PDE.']);
             }
 

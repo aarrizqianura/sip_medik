@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -27,8 +27,8 @@ class UserController extends Controller
             $cari = $request->cari;
             $query->where(function ($q) use ($cari) {
                 $q->where('nama', 'like', "%{$cari}%")
-                  ->orWhere('username', 'like', "%{$cari}%")
-                  ->orWhere('email', 'like', "%{$cari}%");
+                    ->orWhere('username', 'like', "%{$cari}%")
+                    ->orWhere('email', 'like', "%{$cari}%");
             });
         }
 
@@ -67,6 +67,7 @@ class UserController extends Controller
     public function show(User $user)
     {
         $user->load(['dokter.ksm', 'dokter.dokumenSip', 'notifikasi', 'auditLogs']);
+
         return view('admin.users.show', compact('user'));
     }
 
@@ -87,7 +88,7 @@ class UserController extends Controller
             'aktif' => 'required|boolean',
         ]);
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
             unset($validated['password']);
@@ -122,7 +123,7 @@ class UserController extends Controller
             return back()->with('error', 'Anda tidak dapat mengubah status akun Anda sendiri.');
         }
 
-        $user->aktif = !$user->aktif;
+        $user->aktif = ! $user->aktif;
         $user->save();
 
         $statusTeks = $user->aktif ? 'diaktifkan' : 'dinonaktifkan';

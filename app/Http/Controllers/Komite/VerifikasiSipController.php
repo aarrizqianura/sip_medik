@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Komite;
 
 use App\Http\Controllers\Controller;
-use App\Models\DokumenSip;
 use App\Models\AuditLog;
+use App\Models\DokumenSip;
 use App\Models\Notifikasi;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -26,9 +26,9 @@ class VerifikasiSipController extends Controller
             $cari = $request->cari;
             $query->where(function ($q) use ($cari) {
                 $q->where('nomor_sip', 'like', "%{$cari}%")
-                  ->orWhereHas('dokter.user', function ($qu) use ($cari) {
-                      $qu->where('nama', 'like', "%{$cari}%");
-                  });
+                    ->orWhereHas('dokter.user', function ($qu) use ($cari) {
+                        $qu->where('nama', 'like', "%{$cari}%");
+                    });
             });
         }
 
@@ -40,6 +40,7 @@ class VerifikasiSipController extends Controller
     public function show($id)
     {
         $sip = DokumenSip::with(['dokter.user', 'dokter.ksm', 'verifikator'])->findOrFail($id);
+
         return view('verifikasi.review', compact('sip'));
     }
 
@@ -63,9 +64,9 @@ class VerifikasiSipController extends Controller
 
         if ($validated['status_verifikasi'] === 'disetujui') {
             $sip->updateStatusKadaluarsa();
-            $statusMsg = "disetujui dan dinyatakan sah";
+            $statusMsg = 'disetujui dan dinyatakan sah';
         } else {
-            $statusMsg = "ditolak dengan catatan: " . $validated['catatan_verifikasi'];
+            $statusMsg = 'ditolak dengan catatan: '.$validated['catatan_verifikasi'];
         }
 
         $sip->save();

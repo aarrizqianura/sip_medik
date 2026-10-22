@@ -24,10 +24,10 @@ class AuditLogController extends Controller
             $cari = $request->cari;
             $query->where(function ($q) use ($cari) {
                 $q->where('deskripsi', 'like', "%{$cari}%")
-                  ->orWhere('ip_address', 'like', "%{$cari}%")
-                  ->orWhereHas('user', function ($qu) use ($cari) {
-                      $qu->where('nama', 'like', "%{$cari}%");
-                  });
+                    ->orWhere('ip_address', 'like', "%{$cari}%")
+                    ->orWhereHas('user', function ($qu) use ($cari) {
+                        $qu->where('nama', 'like', "%{$cari}%");
+                    });
             });
         }
 

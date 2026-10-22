@@ -211,6 +211,8 @@ class ManajemenStrDokterTest extends TestCase
         $responseStore = $this->actingAs($userDokter5)->post(route('dokter.pengajuan.store'), [
             'nomor_sip' => '446/TEST-SIP/2026',
             'tempat_praktik_ke' => 1,
+            'fasyankes' => 'RSUD dr. H. Moch. Ansari Saleh',
+            'status_kecukupan_skp' => true,
             'tanggal_terbit' => '2026-01-01',
             'tanggal_kadaluarsa' => '2029-01-01',
             'file_sip' => $fileSip,

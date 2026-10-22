@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Dokter;
 use App\Models\DokumenSip;
 use App\Models\KredensialKlinis;
-use App\Models\Notifikasi;
 use App\Models\Ksm;
+use App\Models\Notifikasi;
 use App\Models\PengaturanSistem;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class LaporanController extends Controller
 {
@@ -42,6 +41,7 @@ class LaporanController extends Controller
                         $q->where('status', $st);
                     });
                 }
+
                 return $query->get();
 
             case '2': // Laporan Monitoring Masa Berlaku SIP (Audit Akreditasi KPS)
@@ -57,6 +57,7 @@ class LaporanController extends Controller
                         $q->where('id_ksm', $idKsm);
                     });
                 }
+
                 return $query->orderBy('tanggal_kadaluarsa')->get();
 
             case '3': // Laporan Verifikasi Dokumen SIP (Komite Medik)
@@ -77,6 +78,7 @@ class LaporanController extends Controller
                         $q->where('id_ksm', $idKsm);
                     });
                 }
+
                 return $query->latest()->get();
 
             case '4': // Laporan Masa Berlaku SPK & RKK Dokter
@@ -91,6 +93,7 @@ class LaporanController extends Controller
                         $q->where('id_ksm', $idKsm);
                     });
                 }
+
                 return $query->orderBy('tanggal_berakhir_spk')->get();
 
             case '5': // Laporan Riwayat Notifikasi Pengingat Jatuh Tempo
@@ -105,6 +108,7 @@ class LaporanController extends Controller
                 if ($request->filled('tgl_selesai')) {
                     $query->whereDate('created_at', '<=', $request->tgl_selesai);
                 }
+
                 return $query->latest()->get();
 
             default:
@@ -138,7 +142,7 @@ class LaporanController extends Controller
             'rsTelepon'
         ))->setPaper('a4', 'landscape');
 
-        $filename = 'Laporan_' . str_replace(' ', '_', $judulLaporan) . '_' . date('Ymd_His') . '.pdf';
+        $filename = 'Laporan_'.str_replace(' ', '_', $judulLaporan).'_'.date('Ymd_His').'.pdf';
 
         return $pdf->download($filename);
     }
@@ -157,11 +161,11 @@ class LaporanController extends Controller
             default => 'Laporan_SIM_SIP'
         };
 
-        $filename = $judulLaporan . '_' . date('Ymd_His') . '.xls';
+        $filename = $judulLaporan.'_'.date('Ymd_His').'.xls';
 
         return response()->view('laporan.excel_template', compact('jenis', 'data', 'judulLaporan'))
             ->header('Content-Type', 'application/vnd.ms-excel; charset=utf-8')
-            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
             ->header('Cache-Control', 'max-age=0');
     }
 }

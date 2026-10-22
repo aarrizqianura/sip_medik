@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\SipMonitoringService;
+use Illuminate\Console\Command;
 
 class CekKadaluarsaSipCommand extends Command
 {
@@ -27,14 +27,14 @@ class CekKadaluarsaSipCommand extends Command
     public function handle(SipMonitoringService $monitoringService): int
     {
         $this->info('Memulai evaluasi masa berlaku SIP dokter RSUD dr. H. Moch. Ansari Saleh...');
-        
+
         $hasil = $monitoringService->runDailyCheck();
 
-        $this->info("Pemeriksaan selesai!");
+        $this->info('Pemeriksaan selesai!');
         $this->info("Total berkas diperiksa : {$hasil['total_diperiksa']}");
         $this->info("Pesan WA terkirim      : {$hasil['notifikasi_dikirim']}");
 
-        if (!empty($hasil['detail'])) {
+        if (! empty($hasil['detail'])) {
             $this->table(['Dokter', 'Nomor SIP', 'Sisa Hari'], $hasil['detail']);
         }
 

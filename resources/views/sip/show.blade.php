@@ -67,9 +67,25 @@
                         <span>{{ $sip->dokter->ksm->nama_ksm ?? '-' }}</span>
                     </li>
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between">
+                        <span class="text-muted">Fasyankes Tujuan:</span>
+                        <strong class="text-dark">{{ $sip->fasyankes ?: 'RSUD dr. H. Moch. Ansari Saleh' }}</strong>
+                    </li>
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between">
                         <span class="text-muted">Tempat Praktik:</span>
                         <span>SIP Ke-{{ $sip->tempat_praktik_ke }}</span>
                     </li>
+                    <li class="list-group-item px-0 py-2 d-flex justify-content-between">
+                        <span class="text-muted">Prasyarat SKP:</span>
+                        <span>{!! $sip->status_kecukupan_skp_badge !!}</span>
+                    </li>
+                    @if($sip->file_rekomendasi_skp)
+                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Rekomendasi SKP:</span>
+                            <a href="{{ asset('storage/' . $sip->file_rekomendasi_skp) }}" target="_blank" class="btn btn-2xs btn-outline-teal text-teal">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Unduh SKP SatuSehat
+                            </a>
+                        </li>
+                    @endif
                     <li class="list-group-item px-0 py-2 d-flex justify-content-between">
                         <span class="text-muted">Tanggal Terbit:</span>
                         <span>{{ $sip->tanggal_terbit ? $sip->tanggal_terbit->translatedFormat('d F Y') : '-' }}</span>

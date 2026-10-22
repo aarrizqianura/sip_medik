@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Notifikasi;
 
 class NotifikasiController extends Controller
@@ -35,6 +34,7 @@ class NotifikasiController extends Controller
     public function markAllAsRead()
     {
         auth()->user()->notifikasi()->update(['status_baca' => true]);
+
         return back()->with('sukses', 'Semua notifikasi telah ditandai dibaca.');
     }
 }

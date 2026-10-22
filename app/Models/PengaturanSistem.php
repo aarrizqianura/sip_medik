@@ -20,6 +20,7 @@ class PengaturanSistem extends Model
     public static function get(string $key, $default = null)
     {
         $setting = static::where('kunci', $key)->first();
+
         return $setting ? $setting->nilai : $default;
     }
 

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Komite;
 
 use App\Http\Controllers\Controller;
-use App\Models\KredensialKlinis;
-use App\Models\Dokter;
 use App\Models\AuditLog;
+use App\Models\Dokter;
+use App\Models\KredensialKlinis;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -30,9 +30,9 @@ class KredensialController extends Controller
             $cari = $request->cari;
             $query->where(function ($q) use ($cari) {
                 $q->where('nomor_spk', 'like', "%{$cari}%")
-                  ->orWhereHas('dokter.user', function ($qu) use ($cari) {
-                      $qu->where('nama', 'like', "%{$cari}%");
-                  });
+                    ->orWhereHas('dokter.user', function ($qu) use ($cari) {
+                        $qu->where('nama', 'like', "%{$cari}%");
+                    });
             });
         }
 
@@ -44,6 +44,7 @@ class KredensialController extends Controller
     public function create()
     {
         $dokterList = Dokter::with('user', 'ksm')->get();
+
         return view('komite.kredensial.create', compact('dokterList'));
     }
 
@@ -59,9 +60,9 @@ class KredensialController extends Controller
 
         if ($request->hasFile('file_rkk')) {
             $file = $request->file('file_rkk');
-            $fileName = 'rkk_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $fileName = 'rkk_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
             $file->storeAs('rkk', $fileName, 'public');
-            $validated['file_rkk'] = 'rkk/' . $fileName;
+            $validated['file_rkk'] = 'rkk/'.$fileName;
         }
 
         $kredensial = new KredensialKlinis($validated);
@@ -79,6 +80,7 @@ class KredensialController extends Controller
     {
         $kredensial->load('dokter.user');
         $dokterList = Dokter::with('user')->get();
+
         return view('komite.kredensial.edit', compact('kredensial', 'dokterList'));
     }
 
@@ -96,9 +98,9 @@ class KredensialController extends Controller
                 Storage::disk('public')->delete($kredensial->file_rkk);
             }
             $file = $request->file('file_rkk');
-            $fileName = 'rkk_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $fileName = 'rkk_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
             $file->storeAs('rkk', $fileName, 'public');
-            $validated['file_rkk'] = 'rkk/' . $fileName;
+            $validated['file_rkk'] = 'rkk/'.$fileName;
         }
 
         $kredensial->fill($validated);
