@@ -13,12 +13,32 @@
         </p>
     </div>
     <div>
-        <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-teal text-white btn-sm d-flex align-items-center gap-2">
+        <a href="{{ route('dokter.arsip.saya') }}" class="btn btn-outline-teal btn-sm me-1">
+            <i class="fa-solid fa-box-archive me-1"></i> e-Arsip Saya
+        </a>
+        <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-teal text-white btn-sm d-inline-flex align-items-center gap-2">
             <i class="fa-solid fa-file-arrow-up"></i>
             <span>Unggah Perpanjangan SIP Baru</span>
         </a>
     </div>
 </div>
+
+@if($dokter && $dokter->isAktifLegal())
+<div class="alert alert-success border-success shadow-xs d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-shield-check fs-2 text-success"></i>
+        <div>
+            <div class="fw-bold text-dark fs-6">Status Profil: HAK PRAKTIK PENUH (AKTIF_LEGAL)</div>
+            <div class="fs-xs text-secondary">
+                SK Direktur No. <strong>{{ $dokter->nomor_sk_direktur ?: ($kredensialAktif?->nomor_sk_direktur ?: ($kredensialAktif?->nomor_spk ?: '-')) }}</strong> &bull; Berkas STR, SIP, SPK, dan RKK Anda telah terkunci aman di Repositori e-Arsip Kepegawaian. Tanggal jatuh tempo SIP terpantau otomatis.
+            </div>
+        </div>
+    </div>
+    <a href="{{ route('dokter.arsip.saya') }}" class="btn btn-sm btn-success fw-semibold text-nowrap">
+        <i class="fa-solid fa-folder-open me-1"></i> Buka e-Arsip Saya
+    </a>
+</div>
+@endif
 
 <!-- Primary Countdown Card & Status Legalitas -->
 <div class="row g-4 mb-4">

@@ -10,6 +10,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\Sdm\DokterController;
 use App\Http\Controllers\Sdm\KsmController;
+use App\Http\Controllers\Sdm\PengesahanDireksiController;
 use App\Http\Controllers\Sdm\ReminderController;
 use App\Http\Controllers\SuperAdmin\AuditLogController;
 use App\Http\Controllers\SuperAdmin\PengaturanController;
@@ -53,6 +54,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('laporan/export-pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
         Route::get('laporan/export-excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');
+
+        // Tahap 4: Pengesahan Direksi & Repositori e-Arsip Digital Kepegawaian
+        Route::get('pengesahan-direksi', [PengesahanDireksiController::class, 'index'])->name('pengesahan.index');
+        Route::get('pengesahan-direksi/{kredensial}/proses', [PengesahanDireksiController::class, 'create'])->name('pengesahan.create');
+        Route::post('pengesahan-direksi/{kredensial}/proses', [PengesahanDireksiController::class, 'store'])->name('pengesahan.store');
+        Route::get('e-arsip/{dokter}', [PengesahanDireksiController::class, 'show'])->name('arsip.show');
+        Route::get('e-arsip/{dokter}/cetak', [PengesahanDireksiController::class, 'cetak'])->name('arsip.cetak');
     });
 
     // 3. Role Verifikator Komite Medik (dan Super Admin)
@@ -83,5 +91,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('pengajuan-sip', [PengajuanSipController::class, 'index'])->name('pengajuan.index');
         Route::get('pengajuan-sip/tambah', [PengajuanSipController::class, 'create'])->name('pengajuan.create');
         Route::post('pengajuan-sip', [PengajuanSipController::class, 'store'])->name('pengajuan.store');
+        Route::get('e-arsip', function () {
+            $dokter = auth()->user()->dokter;
+            if (! $dokter) {
+                return redirect()->route('dashboard')->with('error', 'Profil dokter belum terdaftar.');
+            }
+
+            return app(PengesahanDireksiController::class)->show($dokter->id);
+        })->name('arsip.saya');
     });
 });

@@ -313,20 +313,41 @@ class KredensialController extends Controller
         ]);
 
         $kredensial->nomor_spk = $validated['nomor_spk'];
+        $kredensial->nomor_sk_direktur = $validated['nomor_spk'];
         $kredensial->tanggal_terbit_spk = $validated['tanggal_terbit_spk'];
         $kredensial->tanggal_berakhir_spk = $validated['tanggal_berakhir_spk'];
         $kredensial->status_kredensial = 'aktif';
         $kredensial->tahap_rekredensial = 'spk_diterbitkan';
         $kredensial->status_rekomendasi = 'disahkan_direktur';
         $kredensial->tanggal_sah_spk = Carbon::today();
+        $kredensial->is_spk_locked = true;
+        $kredensial->is_rkk_locked = true;
         $kredensial->save();
 
-        $dokterUser = $kredensial->dokter->user;
+        $dokter = $kredensial->dokter;
+        $dokter->status_praktik = 'AKTIF_LEGAL';
+        $dokter->is_arsip_locked = true;
+        $dokter->is_str_locked = true;
+        $dokter->arsip_locked_at = Carbon::now();
+        $dokter->arsip_locked_by = auth()->id();
+        $dokter->nomor_sk_direktur = $validated['nomor_spk'];
+        $dokter->tanggal_sk_direktur = $validated['tanggal_terbit_spk'];
+        $dokter->save();
+
+        if ($dokter->sipTerbaru) {
+            $dokter->sipTerbaru->is_sip_locked = true;
+            $dokter->sipTerbaru->arsip_locked_at = Carbon::now();
+            $dokter->sipTerbaru->status_verifikasi = 'disetujui';
+            $dokter->sipTerbaru->updateStatusKadaluarsa();
+            $dokter->sipTerbaru->save();
+        }
+
+        $dokterUser = $dokter->user;
 
         Notifikasi::create([
             'id_user' => $dokterUser->id,
-            'id_sip' => $kredensial->dokter->sipTerbaru?->id,
-            'pesan' => "Selamat dr. {$dokterUser->nama}, Surat Penugasan Klinis (SPK) & RKK baru No. {$kredensial->nomor_spk} telah resmi disahkan Direktur untuk periode 3 tahun ke depan (berlaku s.d. ".Carbon::parse($kredensial->tanggal_berakhir_spk)->format('d F Y').').',
+            'id_sip' => $dokter->sipTerbaru?->id,
+            'pesan' => "Selamat dr. {$dokterUser->nama}, Surat Penugasan Klinis (SPK) & RKK baru No. {$kredensial->nomor_spk} telah resmi disahkan Direktur untuk periode 3 tahun ke depan (berlaku s.d. ".Carbon::parse($kredensial->tanggal_berakhir_spk)->format('d F Y').'). Status profil Anda kini AKTIF_LEGAL dan berkas terkunci di e-Arsip.',
             'kanal' => 'sistem',
             'status_terkirim' => true,
         ]);
@@ -334,10 +355,10 @@ class KredensialController extends Controller
         AuditLog::record(
             'SAHKAN_SPK',
             'Direktur RSUD',
-            "Mengesahkan Surat Penugasan Klinis (SPK) baru No. {$kredensial->nomor_spk} untuk dr. {$dokterUser->nama} masa berlaku 3 tahun."
+            "Mengesahkan Surat Penugasan Klinis (SPK) baru No. {$kredensial->nomor_spk} untuk dr. {$dokterUser->nama} masa berlaku 3 tahun. Status profil AKTIF_LEGAL & berkas e-Arsip terkunci."
         );
 
         return redirect()->route('komite.kredensial.surat_rekomendasi', $kredensial->id)
-            ->with('sukses', "Surat Penugasan Klinis (SPK) No. {$kredensial->nomor_spk} resmi disahkan untuk masa berlaku 3 tahun!");
+            ->with('sukses', "Surat Penugasan Klinis (SPK) No. {$kredensial->nomor_spk} resmi disahkan! Status profil dr. {$dokterUser->nama} AKTIF_LEGAL dan instrumen STR, SIP, SPK, RKK terkunci ke e-Arsip.");
     }
 }

@@ -35,6 +35,12 @@ class KredensialKlinis extends Model
         'catatan_rekomendasi',
         'status_rekomendasi',
         'tanggal_sah_spk',
+        'nomor_sk_direktur',
+        'tanggal_sk_direktur',
+        'file_sk_direktur',
+        'is_spk_locked',
+        'is_rkk_locked',
+        'disahkan_oleh_sdm',
     ];
 
     protected $casts = [
@@ -43,12 +49,20 @@ class KredensialKlinis extends Model
         'tanggal_sidang' => 'date',
         'tanggal_rekomendasi' => 'date',
         'tanggal_sah_spk' => 'date',
+        'tanggal_sk_direktur' => 'date',
         'daftar_rkk' => 'array',
+        'is_spk_locked' => 'boolean',
+        'is_rkk_locked' => 'boolean',
     ];
 
     public function dokter(): BelongsTo
     {
         return $this->belongsTo(Dokter::class, 'id_dokter');
+    }
+
+    public function petugasSdmPengesah(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'disahkan_oleh_sdm');
     }
 
     public function hitungSisaHari(): int

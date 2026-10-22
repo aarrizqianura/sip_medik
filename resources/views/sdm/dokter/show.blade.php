@@ -17,10 +17,33 @@
             </p>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('sdm.arsip.show', $dokter->id) }}" class="btn btn-outline-teal btn-sm">
+                <i class="fa-solid fa-box-archive me-1"></i> Repositori e-Arsip
+            </a>
             <a href="{{ route('sdm.dokter.edit', $dokter->id) }}" class="btn btn-outline-primary btn-sm">
                 <i class="fa-solid fa-pen-to-square me-1"></i> Edit Profil
             </a>
         </div>
+    </div>
+</div>
+
+<!-- Status Hak Praktik & e-Arsip Banner -->
+<div class="p-3 mb-4 rounded border d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 {{ $dokter->isAktifLegal() ? 'bg-success-subtle text-success border-success' : 'bg-warning-subtle text-warning-emphasis border-warning' }}">
+    <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid {{ $dokter->isAktifLegal() ? 'fa-shield-check fs-2 text-success' : 'fa-hourglass-half fs-2 text-warning' }}"></i>
+        <div>
+            <div class="fs-xs fw-bold text-uppercase">Status Legalitas & Hak Praktik Klinis:</div>
+            <div class="fs-6 fw-bold text-dark">{{ $dokter->status_praktik_label }}</div>
+            <div class="fs-xs text-secondary">
+                SK Direktur: <strong>{{ $dokter->nomor_sk_direktur ?: 'Menunggu Penetapan' }}</strong> &bull; 
+                Repositori e-Arsip: <strong>{{ $dokter->is_arsip_locked ? 'Terkunci Resmi' : 'Belum Terkunci' }}</strong>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ route('sdm.arsip.show', $dokter->id) }}" class="btn btn-xs btn-teal text-white fw-semibold">
+            <i class="fa-solid fa-folder-open me-1"></i> Buka Repositori e-Arsip
+        </a>
     </div>
 </div>
 

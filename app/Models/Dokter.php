@@ -35,15 +35,26 @@ class Dokter extends Model
         'catatan_verifikasi_str',
         'satusehat_verified_at',
         'satusehat_data',
+        'status_praktik',
+        'is_arsip_locked',
+        'arsip_locked_at',
+        'arsip_locked_by',
+        'nomor_sk_direktur',
+        'tanggal_sk_direktur',
+        'file_sk_direktur',
+        'catatan_pengesahan_direksi',
     ];
 
     protected $casts = [
         'tanggal_terbit_str' => 'date',
         'tanggal_kadaluarsa_str' => 'date',
+        'tanggal_sk_direktur' => 'date',
         'verified_str_at' => 'datetime',
+        'arsip_locked_at' => 'datetime',
         'satusehat_verified_at' => 'datetime',
         'satusehat_data' => 'array',
         'is_str_locked' => 'boolean',
+        'is_arsip_locked' => 'boolean',
         'tempat_praktik_ke' => 'integer',
     ];
 
@@ -187,5 +198,58 @@ class Dokter extends Model
             'ditolak' => '<span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Ditolak</span>',
             default => '<span class="badge bg-secondary-subtle text-secondary border border-secondary"><i class="fa-solid fa-file-circle-question me-1"></i> Belum Lengkap</span>',
         };
+    }
+
+    public function arsipLockedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'arsip_locked_by');
+    }
+
+    public function isAktifLegal(): bool
+    {
+        return $this->status_praktik === 'AKTIF_LEGAL';
+    }
+
+    public function isArsipLengkapDanTerkunci(): bool
+    {
+        $spk = $this->spkTerbaru ?: $this->kredensialTerbaru;
+        $sip = $this->sipTerbaru;
+
+        return (bool) $this->is_str_locked
+            && $this->status_verifikasi_str === 'tervalidasi'
+            && (bool) ($sip?->is_sip_locked || $sip?->status_verifikasi === 'disetujui')
+            && (bool) ($spk?->is_spk_locked || $spk?->status_kredensial === 'aktif')
+            && (bool) ($this->is_arsip_locked || $this->status_praktik === 'AKTIF_LEGAL');
+    }
+
+    public function getStatusPraktikLabelAttribute(): string
+    {
+        return match ($this->status_praktik) {
+            'AKTIF_LEGAL' => 'Hak Praktik Penuh (AKTIF_LEGAL)',
+            'MENUNGGU_PENGESAHAN' => 'Menunggu SK Direktur',
+            'NONAKTIF' => 'Non-Aktif / Ditangguhkan',
+            'DITANGGUHKAN' => 'Ditangguhkan (Peringatan Legal)',
+            default => 'Belum Lengkap',
+        };
+    }
+
+    public function getStatusPraktikBadgeAttribute(): string
+    {
+        return match ($this->status_praktik) {
+            'AKTIF_LEGAL' => '<span class="badge bg-success text-white shadow-xs px-2 py-1"><i class="fa-solid fa-shield-check me-1"></i> AKTIF_LEGAL</span>',
+            'MENUNGGU_PENGESAHAN' => '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1"><i class="fa-solid fa-file-signature me-1"></i> Menunggu SK Direktur</span>',
+            'NONAKTIF' => '<span class="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1"><i class="fa-solid fa-ban me-1"></i> Non-Aktif</span>',
+            'DITANGGUHKAN' => '<span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Ditangguhkan</span>',
+            default => '<span class="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1"><i class="fa-solid fa-file-circle-exclamation me-1"></i> Belum Lengkap</span>',
+        };
+    }
+
+    public function getArsipStatusBadgeAttribute(): string
+    {
+        if ($this->is_arsip_locked || $this->status_praktik === 'AKTIF_LEGAL') {
+            return '<span class="badge bg-emerald-subtle text-emerald border border-emerald fs-xs"><i class="fa-solid fa-lock text-success me-1"></i> e-Arsip Terkunci Resmi</span>';
+        }
+
+        return '<span class="badge bg-amber-subtle text-amber-emphasis border border-warning fs-xs"><i class="fa-solid fa-lock-open me-1"></i> Arsip Belum Terkunci</span>';
     }
 }

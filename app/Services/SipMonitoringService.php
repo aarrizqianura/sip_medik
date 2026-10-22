@@ -111,6 +111,13 @@ class SipMonitoringService
         $kredensialProsesRekredensial = KredensialKlinis::whereIn('status_kredensial', ['proses_rekredensial', 'sidang_komite'])->count();
         $kredensialRekomendasiTerbit = KredensialKlinis::where('status_kredensial', 'rekomendasi_terbit')->count();
 
+        // Statistik Tahap 4: Pengesahan Direksi & e-Arsip Kepegawaian
+        $dokterAktifLegal = Dokter::where('status_praktik', 'AKTIF_LEGAL')->count();
+        $dokterMenungguPengesahan = KredensialKlinis::where('status_rekomendasi', 'diterbitkan')
+            ->where('status_kredensial', 'rekomendasi_terbit')
+            ->count();
+        $arsipTerkunci = Dokter::where('is_arsip_locked', true)->count();
+
         return compact(
             'totalDokter',
             'totalSip',
@@ -124,7 +131,10 @@ class SipMonitoringService
             'kredensialEvaluasi',
             'kredensialKadaluarsa',
             'kredensialProsesRekredensial',
-            'kredensialRekomendasiTerbit'
+            'kredensialRekomendasiTerbit',
+            'dokterAktifLegal',
+            'dokterMenungguPengesahan',
+            'arsipTerkunci'
         );
     }
 }

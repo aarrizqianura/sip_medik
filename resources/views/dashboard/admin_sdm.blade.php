@@ -72,6 +72,60 @@
     </div>
 </div>
 
+<!-- Widget Tahap 4: Pengesahan Direksi & e-Arsip Kepegawaian -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-xs border-success h-100 bg-success-subtle">
+            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fs-xs fw-bold text-success text-uppercase">Hak Praktik AKTIF_LEGAL</span>
+                    <h3 class="fw-bold text-dark mb-0 mt-1">{{ $stats['dokterAktifLegal'] ?? 0 }}</h3>
+                    <div class="fs-xs text-secondary mt-1">Kewenangan penuh & SPK aktif 3 tahun</div>
+                </div>
+                <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 46px; height: 46px;">
+                    <i class="fa-solid fa-shield-check fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-xs border-warning h-100 bg-warning-subtle">
+            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fs-xs fw-bold text-warning-emphasis text-uppercase">Siap Disahkan Direktur</span>
+                    <h3 class="fw-bold text-dark mb-0 mt-1">{{ $stats['dokterMenungguPengesahan'] ?? 0 }}</h3>
+                    <div class="fs-xs text-secondary mt-1">
+                        <a href="{{ route('sdm.pengesahan.index') }}" class="text-dark fw-bold text-decoration-none">
+                            Terbitkan SK Direktur &raquo;
+                        </a>
+                    </div>
+                </div>
+                <div class="avatar bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 46px; height: 46px;">
+                    <i class="fa-solid fa-stamp fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-xs border-teal h-100 bg-teal-subtle">
+            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fs-xs fw-bold text-teal text-uppercase">e-Arsip Kepegawaian Terkunci</span>
+                    <h3 class="fw-bold text-dark mb-0 mt-1">{{ $stats['arsipTerkunci'] ?? 0 }}</h3>
+                    <div class="fs-xs text-secondary mt-1">
+                        <a href="{{ route('sdm.pengesahan.index', ['tab' => 'semua']) }}" class="text-teal fw-bold text-decoration-none">
+                            Buka Repositori e-Arsip &raquo;
+                        </a>
+                    </div>
+                </div>
+                <div class="avatar bg-teal text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 46px; height: 46px;">
+                    <i class="fa-solid fa-box-archive fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <!-- Matriks Early Warning -->
     <div class="col-lg-8">

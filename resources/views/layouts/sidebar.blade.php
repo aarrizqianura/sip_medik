@@ -72,6 +72,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('sdm.pengesahan.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'sdm.pengesahan') || str_starts_with($currentRoute, 'sdm.arsip') ? 'active' : '' }}">
+                        <i class="fa-solid fa-stamp me-2"></i>
+                        <span>Pengesahan & e-Arsip</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ route('sdm.ksm.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'sdm.ksm') ? 'active' : '' }}">
                         <i class="fa-solid fa-sitemap me-2"></i>
                         <span>Kelompok Staf Medis (KSM)</span>
@@ -121,6 +127,12 @@
                     <a href="{{ route('dokter.pengajuan.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'dokter.pengajuan') ? 'active' : '' }}">
                         <i class="fa-solid fa-file-arrow-up me-2"></i>
                         <span>Unggah & Riwayat SIP</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('dokter.arsip.saya') }}" class="nav-link {{ $currentRoute == 'dokter.arsip.saya' ? 'active' : '' }}">
+                        <i class="fa-solid fa-box-archive me-2"></i>
+                        <span>e-Arsip & Hak Praktik</span>
                     </a>
                 </li>
             @endif

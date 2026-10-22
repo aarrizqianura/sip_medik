@@ -24,13 +24,19 @@
                 <i class="fa-solid fa-pen-to-square me-1"></i> Ubah Draf RKK
             </a>
             @if($kredensial->status_kredensial !== 'aktif' || $kredensial->status_rekomendasi !== 'disahkan_direktur')
-                <button type="button" class="btn btn-success btn-sm shadow-xs fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSahkanSpk">
-                    <i class="fa-solid fa-stamp me-1"></i> Sahkan & Terbitkan SPK Baru (Direktur)
+                <a href="{{ route('sdm.pengesahan.create', $kredensial->id) }}" class="btn btn-teal text-white btn-sm shadow-xs fw-semibold">
+                    <i class="fa-solid fa-stamp me-1"></i> Terbitkan SK Direktur & Kunci e-Arsip (SDM)
+                </a>
+                <button type="button" class="btn btn-outline-success btn-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#modalSahkanSpk">
+                    <i class="fa-solid fa-signature me-1"></i> Pengesahan Langsung Direktur
                 </button>
             @else
                 <span class="badge bg-success-subtle text-success border border-success px-3 py-2 fs-sm">
                     <i class="fa-solid fa-circle-check me-1"></i> SPK Telah Disahkan Direktur
                 </span>
+                <a href="{{ route('sdm.arsip.show', $dokter->id) }}" class="btn btn-teal text-white btn-sm">
+                    <i class="fa-solid fa-box-archive me-1"></i> Buka e-Arsip Terkunci
+                </a>
             @endif
         </div>
     </div>

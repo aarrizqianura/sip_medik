@@ -35,6 +35,8 @@ class DokumenSip extends Model
         'checklist_keabsahan_fasyankes',
         'checklist_masa_berlaku',
         'checklist_keterbacaan_pindaian',
+        'is_sip_locked',
+        'arsip_locked_at',
         'verified_by',
         'verified_at',
     ];
@@ -43,7 +45,9 @@ class DokumenSip extends Model
         'tanggal_terbit' => 'date',
         'tanggal_kadaluarsa' => 'date',
         'verified_at' => 'datetime',
+        'arsip_locked_at' => 'datetime',
         'tempat_praktik_ke' => 'integer',
+        'is_sip_locked' => 'boolean',
         'status_kecukupan_skp' => 'boolean',
         'permohonan_kewenangan_baru' => 'boolean',
         'checklist_keabsahan_fasyankes' => 'boolean',

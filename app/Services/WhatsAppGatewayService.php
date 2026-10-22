@@ -97,4 +97,52 @@ class WhatsAppGatewayService
             'pesan' => $pesan,
         ];
     }
+
+    /**
+     * Kirim pesan teks WhatsApp umum (misal: notifikasi pengesahan SK Direktur)
+     */
+    public function kirimPesanTeks(string $noWa, string $pesan, ?int $idUser = null): array
+    {
+        $apiUrl = PengaturanSistem::get('wa_api_url', config('services.wa_gateway.endpoint', 'https://api.fonnte.com/send'));
+        $apiToken = PengaturanSistem::get('wa_api_token', config('services.wa_gateway.token', ''));
+
+        $sukses = false;
+        $responseInfo = 'Mock / Offline';
+
+        if (! empty($apiUrl) && ! empty($apiToken) && ! empty($noWa)) {
+            try {
+                $response = Http::timeout(10)->withHeaders([
+                    'Authorization' => $apiToken,
+                ])->post($apiUrl, [
+                    'target' => $noWa,
+                    'message' => $pesan,
+                ]);
+
+                $sukses = $response->successful();
+                $responseInfo = $response->body();
+            } catch (\Exception $e) {
+                Log::error("Gagal kirim WA ke {$noWa}: ".$e->getMessage());
+                $responseInfo = $e->getMessage();
+            }
+        } else {
+            $sukses = true;
+            $responseInfo = 'Simulated Delivery (Local environment)';
+        }
+
+        if ($idUser) {
+            Notifikasi::create([
+                'id_user' => $idUser,
+                'pesan' => $pesan,
+                'kanal' => 'whatsapp',
+                'status_terkirim' => $sukses,
+                'status_baca' => false,
+            ]);
+        }
+
+        return [
+            'status' => $sukses,
+            'info' => $responseInfo,
+            'pesan' => $pesan,
+        ];
+    }
 }

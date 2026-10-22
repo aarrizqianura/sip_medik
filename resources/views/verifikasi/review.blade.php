@@ -160,7 +160,12 @@
                     </tr>
                     <tr>
                         <td class="text-muted">Prasyarat SKP</td>
-                        <td>: {!! $sip->status_kecukupan_skp_badge !!}</td>
+                        <td>
+                            : {!! $sip->status_kecukupan_skp_badge !!}
+                            @if($sip->nomor_rekomendasi_skp)
+                                <div class="fs-xs font-monospace text-muted mt-1"><i class="fa-solid fa-file-shield text-primary me-1"></i>No. Rekom: <strong>{{ $sip->nomor_rekomendasi_skp }}</strong></div>
+                            @endif
+                        </td>
                     </tr>
                     <tr>
                         <td class="text-muted">Masa Berlaku</td>

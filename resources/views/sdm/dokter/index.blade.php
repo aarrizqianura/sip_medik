@@ -76,6 +76,7 @@
                     <th>Status Validasi STR</th>
                     <th>Praktik RSUD</th>
                     <th>SIP Aktif</th>
+                    <th>Status Hak Praktik</th>
                     <th class="text-end">Aksi</th>
                 </tr>
             </thead>
@@ -143,8 +144,17 @@
                                 <span class="badge bg-secondary-subtle text-secondary">Belum ada SIP</span>
                             @endif
                         </td>
+                        <td>
+                            {!! $dok->status_praktik_badge !!}
+                            @if($dok->is_arsip_locked)
+                                <div class="fs-3xs text-success mt-1"><i class="fa-solid fa-lock me-1"></i>e-Arsip Dikunci</div>
+                            @endif
+                        </td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm">
+                                <a href="{{ route('sdm.arsip.show', $dok->id) }}" class="btn btn-outline-teal" title="e-Arsip & Hak Praktik">
+                                    <i class="fa-solid fa-folder-open"></i>
+                                </a>
                                 <a href="{{ route('sdm.dokter.show', $dok->id) }}" class="btn btn-outline-secondary" title="Detail Dokter">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
