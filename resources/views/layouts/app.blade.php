@@ -226,6 +226,14 @@
             border-color: #fed7aa;
         }
 
+        .status-pill.status-critical {
+            background-color: #ffedd5;
+            color: #9a3412;
+            border-color: #ea580c;
+            border-width: 1.5px;
+            font-weight: 700;
+        }
+
         .status-pill.status-overdue {
             background-color: #ffe4e6;
             color: #9f1239;
@@ -238,6 +246,23 @@
             font-weight: 700;
             padding: 0.35rem 0.65rem;
             border-radius: 0.5rem;
+        }
+
+        .countdown-badge.bg-critical {
+            background-color: #ea580c !important;
+            color: #ffffff !important;
+        }
+        .countdown-badge.bg-due {
+            background-color: #f97316 !important;
+            color: #ffffff !important;
+        }
+        .countdown-badge.bg-due-soon {
+            background-color: #eab308 !important;
+            color: #1e293b !important;
+        }
+        .countdown-badge.bg-safe {
+            background-color: #10b981 !important;
+            color: #ffffff !important;
         }
     </style>
     @stack('styles')

@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('ksm', KsmController::class);
         Route::get('reminder', [ReminderController::class, 'index'])->name('reminder.index');
         Route::post('reminder/blast', [ReminderController::class, 'blast'])->name('reminder.blast');
+        Route::post('reminder/run-engine', [ReminderController::class, 'runEngine'])->name('reminder.run_engine');
         Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
         Route::get('laporan/export-pdf', [LaporanController::class, 'exportPdf'])->name('laporan.pdf');
         Route::get('laporan/export-excel', [LaporanController::class, 'exportExcel'])->name('laporan.excel');

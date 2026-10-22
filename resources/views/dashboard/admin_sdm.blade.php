@@ -21,52 +21,65 @@
 </div>
 
 <!-- 4 Key Metrics Cards -->
+<!-- 5 Key Metrics Cards (Tahap 5: Early Warning Engine Tiers) -->
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-sm-6 col-xl">
         <div class="card h-100 border-start border-4 border-emerald shadow-xs">
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">SIP Absah (>90 Hari)</span>
-                    <span class="badge bg-success-subtle text-success rounded-pill"><i class="fa-solid fa-check"></i> Aktif</span>
+                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Sisa >90 Hari</span>
+                    <span class="status-pill status-aktif fs-xs"><i class="fa-solid fa-check me-1"></i> Aktif</span>
                 </div>
-                <div class="fs-2 fw-bold text-dark">{{ $stats['sipAktif'] }}</div>
-                <div class="text-muted fs-xs mt-1">Dokter siap praktik mandiri</div>
+                <div class="fs-2 fw-bold text-success">{{ $stats['sipAktif'] ?? 0 }}</div>
+                <div class="text-muted fs-xs mt-1">Status aman, tanpa pesan</div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-sm-6 col-xl">
         <div class="card h-100 border-start border-4 border-warning shadow-xs">
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Due Soon (31-90 Hari)</span>
-                    <span class="badge bg-warning-subtle text-warning rounded-pill"><i class="fa-solid fa-clock"></i> Peringatan</span>
+                    <span class="text-secondary fs-xs fw-semibold text-uppercase">H-90 s.d H-60</span>
+                    <span class="status-pill status-due_soon fs-xs"><i class="fa-solid fa-clock me-1"></i> Due Soon</span>
                 </div>
-                <div class="fs-2 fw-bold text-warning">{{ $stats['sipDueSoon'] }}</div>
-                <div class="text-muted fs-xs mt-1">Pemberitahuan perpanjangan DPMPTSP</div>
+                <div class="fs-2 fw-bold text-warning-emphasis">{{ $stats['sipDueSoon'] ?? 0 }}</div>
+                <div class="text-muted fs-xs mt-1">Pengingat SKP SatuSehat dokter</div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card h-100 border-start border-4 border-orange shadow-xs" style="border-left-color: #ea580c !important;">
-            <div class="card-body">
+    <div class="col-sm-6 col-xl">
+        <div class="card h-100 border-start border-4 shadow-xs" style="border-left-color: #f97316 !important;">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Kritis / Due (≤30 Hari)</span>
-                    <span class="badge bg-danger-subtle text-danger rounded-pill"><i class="fa-solid fa-bell"></i> Kritis</span>
+                    <span class="text-secondary fs-xs fw-semibold text-uppercase">H-30 (Due)</span>
+                    <span class="status-pill status-due fs-xs"><i class="fa-solid fa-bell me-1"></i> Mendesak</span>
                 </div>
-                <div class="fs-2 fw-bold text-danger">{{ $stats['sipDue'] }}</div>
-                <div class="text-muted fs-xs mt-1">Peringatan jatuh tempo segera</div>
+                <div class="fs-2 fw-bold text-orange" style="color: #ea580c !important;">{{ $stats['sipDue'] ?? 0 }}</div>
+                <div class="text-muted fs-xs mt-1">Peringatan dokter & salinan SDM</div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
+    <div class="col-sm-6 col-xl">
+        <div class="card h-100 border-start border-4 shadow-xs" style="border-left-color: #c2410c !important;">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-secondary fs-xs fw-semibold text-uppercase">H-7 (Critical)</span>
+                    <span class="status-pill status-critical fs-xs"><i class="fa-solid fa-radiation me-1"></i> Kritis</span>
+                </div>
+                <div class="fs-2 fw-bold" style="color: #c2410c !important;">{{ $stats['sipCritical'] ?? 0 }}</div>
+                <div class="text-muted fs-xs mt-1">Eskalasi berjenjang Dokter & SDM</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl">
         <div class="card h-100 border-start border-4 border-danger shadow-xs">
-            <div class="card-body">
+            <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Kedaluwarsa (Overdue)</span>
-                    <span class="badge bg-danger text-white rounded-pill"><i class="fa-solid fa-ban"></i> Stop Layanan</span>
+                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Overdue</span>
+                    <span class="badge bg-danger text-white rounded-pill"><i class="fa-solid fa-ban"></i> Stop</span>
                 </div>
-                <div class="fs-2 fw-bold text-danger">{{ $stats['sipOverdue'] }}</div>
-                <div class="text-muted fs-xs mt-1">Wajib proses perpanjangan segera</div>
+                <div class="fs-2 fw-bold text-danger">{{ $stats['sipOverdue'] ?? 0 }}</div>
+                <div class="text-muted fs-xs mt-1">Wajib perpanjangan segera</div>
             </div>
         </div>
     </div>
@@ -162,12 +175,50 @@
                                 <td><span class="font-monospace fs-xs">{{ $sip->nomor_sip }}</span></td>
                                 <td>{{ $sip->tanggal_kadaluarsa ? $sip->tanggal_kadaluarsa->format('d/m/Y') : '-' }}</td>
                                 <td>
-                                    <span class="countdown-badge {{ $sisa < 0 ? 'bg-danger text-white' : ($sisa <= 30 ? 'bg-warning text-dark' : 'bg-info text-white') }}">
-                                        {{ $sisa < 0 ? 'Kedaluwarsa (' . abs($sisa) . ' hr)' : $sisa . ' Hari' }}
-                                    </span>
+                                    @if($sisa < 0)
+                                        <span class="countdown-badge bg-danger text-white">
+                                            <i class="fa-solid fa-ban me-1"></i> Kedaluwarsa ({{ abs($sisa) }} hr)
+                                        </span>
+                                    @elseif($sisa <= 7)
+                                        <span class="countdown-badge bg-critical text-white" style="background-color: #ea580c !important;">
+                                            <i class="fa-solid fa-radiation me-1"></i> H-{{ $sisa }} Kritis
+                                        </span>
+                                    @elseif($sisa <= 30)
+                                        <span class="countdown-badge bg-due text-white" style="background-color: #f97316 !important;">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> H-{{ $sisa }} Mendesak
+                                        </span>
+                                    @elseif($sisa <= 90)
+                                        <span class="countdown-badge bg-due-soon text-dark" style="background-color: #fef08a !important; color: #854d0e !important;">
+                                            <i class="fa-solid fa-clock me-1"></i> H-{{ $sisa }} Hari
+                                        </span>
+                                    @else
+                                        <span class="countdown-badge bg-safe text-white" style="background-color: #10b981 !important;">
+                                            <i class="fa-solid fa-circle-check me-1"></i> {{ $sisa }} Hari
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
-                                    <span class="status-pill status-{{ $sip->status }}">{{ $sip->status_label }}</span>
+                                    @if($sip->status === 'critical')
+                                        <span class="status-pill status-critical fs-xs">
+                                            <i class="fa-solid fa-radiation me-1"></i> Eskalasi Kritis (H-7)
+                                        </span>
+                                    @elseif($sip->status === 'due')
+                                        <span class="status-pill status-due fs-xs">
+                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Peringatan Mendesak (H-30)
+                                        </span>
+                                    @elseif($sip->status === 'due_soon')
+                                        <span class="status-pill status-due_soon fs-xs">
+                                            <i class="fa-solid fa-clock me-1"></i> Due Soon (H-90 s.d H-60)
+                                        </span>
+                                    @elseif($sip->status === 'overdue')
+                                        <span class="status-pill status-overdue fs-xs">
+                                            <i class="fa-solid fa-ban me-1"></i> Kedaluwarsa
+                                        </span>
+                                    @else
+                                        <span class="status-pill status-aktif fs-xs">
+                                            <i class="fa-solid fa-circle-check me-1"></i> Aktif (>90 Hari)
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     <form action="{{ route('sdm.reminder.kirim', $sip->id) }}" method="POST" class="d-inline">

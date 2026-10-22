@@ -64,7 +64,7 @@ class DashboardController extends Controller
 
         $dokumenKritis = DokumenSip::with(['dokter.user', 'dokter.ksm'])
             ->where('status_verifikasi', 'disetujui')
-            ->whereIn('status', ['due', 'overdue'])
+            ->whereIn('status', ['critical', 'due', 'overdue'])
             ->orderBy('tanggal_kadaluarsa')
             ->take(10)
             ->get();

@@ -37,6 +37,10 @@ class DokumenSip extends Model
         'checklist_keterbacaan_pindaian',
         'is_sip_locked',
         'arsip_locked_at',
+        'tingkat_eskalasi',
+        'terakhir_notifikasi_dokter_at',
+        'terakhir_eskalasi_sdm_at',
+        'log_eskalasi_terakhir',
         'verified_by',
         'verified_at',
     ];
@@ -46,6 +50,8 @@ class DokumenSip extends Model
         'tanggal_kadaluarsa' => 'date',
         'verified_at' => 'datetime',
         'arsip_locked_at' => 'datetime',
+        'terakhir_notifikasi_dokter_at' => 'datetime',
+        'terakhir_eskalasi_sdm_at' => 'datetime',
         'tempat_praktik_ke' => 'integer',
         'is_sip_locked' => 'boolean',
         'status_kecukupan_skp' => 'boolean',
@@ -79,18 +85,37 @@ class DokumenSip extends Model
         return (int) Carbon::today()->diffInDays(Carbon::parse($this->tanggal_kadaluarsa), false);
     }
 
+    /**
+     * Periksa apakah notifikasi untuk tingkat eskalasi tertentu sudah dikirim hari ini
+     */
+    public function pernahDikirimNotifikasi(string $tingkatEskalasi, string $tipePenerima = 'dokter'): bool
+    {
+        return $this->notifikasi()
+            ->where('tingkat_eskalasi', $tingkatEskalasi)
+            ->where('tipe_penerima', $tipePenerima)
+            ->whereDate('created_at', Carbon::today())
+            ->exists();
+    }
+
     public function updateStatusKadaluarsa(): string
     {
         $selisih = $this->hitungSisaHari();
 
         if ($selisih < 0) {
             $this->status = 'overdue';
+            $this->tingkat_eskalasi = 'kedaluwarsa';
+        } elseif ($selisih <= 7) {
+            $this->status = 'critical';
+            $this->tingkat_eskalasi = 'eskalasi_kritis';
         } elseif ($selisih <= 30) {
             $this->status = 'due';
+            $this->tingkat_eskalasi = 'peringatan_mendesak';
         } elseif ($selisih <= 90) {
             $this->status = 'due_soon';
+            $this->tingkat_eskalasi = 'pengingat_pertama';
         } else {
             $this->status = 'aktif';
+            $this->tingkat_eskalasi = 'aman';
         }
 
         $this->save();
@@ -102,8 +127,9 @@ class DokumenSip extends Model
     {
         return match ($this->status) {
             'aktif' => 'Aktif (>90 Hari)',
-            'due_soon' => 'Due Soon (31-90 Hari)',
-            'due' => 'Kritis / Due (≤30 Hari)',
+            'due_soon' => 'Due Soon (H-90 s.d H-60)',
+            'due' => 'Peringatan Mendesak (H-30)',
+            'critical' => 'Eskalasi Kritis (H-7)',
             'overdue' => 'Kadaluarsa / Overdue',
             default => ucfirst($this->status),
         };
@@ -115,6 +141,7 @@ class DokumenSip extends Model
             'aktif' => 'bg-emerald-100 text-emerald-800 border-emerald-300',
             'due_soon' => 'bg-amber-100 text-amber-800 border-amber-300',
             'due' => 'bg-orange-100 text-orange-800 border-orange-300',
+            'critical' => 'bg-orange-200 text-orange-950 border-orange-500 font-bold',
             'overdue' => 'bg-rose-100 text-rose-800 border-rose-300',
             default => 'bg-slate-100 text-slate-800 border-slate-300',
         };

@@ -15,15 +15,19 @@ class Notifikasi extends Model
     protected $fillable = [
         'id_user',
         'id_sip',
+        'tingkat_eskalasi',
+        'tipe_penerima',
         'pesan',
         'kanal',
         'status_terkirim',
         'status_baca',
+        'metadata',
     ];
 
     protected $casts = [
         'status_terkirim' => 'boolean',
         'status_baca' => 'boolean',
+        'metadata' => 'array',
     ];
 
     public function user(): BelongsTo
