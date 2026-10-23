@@ -139,6 +139,34 @@
     </div>
 </div>
 
+<!-- Widget Tahap 6: Alur Masa Tenggang Administratif (Grace Period / On-Process) -->
+<div class="card shadow-xs border-teal mb-4 overflow-hidden">
+    <div class="card-body p-3 bg-light-teal d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="avatar bg-teal text-white rounded-circle d-flex align-items-center justify-content-center shadow-2xs" style="width: 44px; height: 44px;">
+                <i class="fa-solid fa-business-time fs-4"></i>
+            </div>
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-teal text-white fs-3xs">TAHAP 6: GRACE PERIOD</span>
+                    <strong class="text-dark fs-sm">Alur Masa Tenggang Administratif & Proteksi Pelayanan</strong>
+                </div>
+                <div class="fs-xs text-secondary mt-1">
+                    <span class="badge bg-warning text-dark me-1">{{ $stats['dispensasiDiajukan'] ?? 0 }} Menunggu Telaah</span>
+                    <span class="badge bg-teal text-white me-1">{{ $stats['dispensasiAktif'] ?? 0 }} Grace Period Aktif</span>
+                    Pelayanan medis dan wewenang klinis (SPK/RKK) terproteksi penuh selama masa proses perizinan di DPMPTSP/Dinkes.
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ route('sdm.dispensasi.index') }}" class="btn btn-teal text-white btn-sm shadow-2xs d-inline-flex align-items-center gap-1 text-nowrap">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Kelola Masa Tenggang</span>
+            </a>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4">
     <!-- Matriks Early Warning -->
     <div class="col-lg-8">

@@ -6,6 +6,7 @@ use App\Models\Dokter;
 use App\Models\DokumenSip;
 use App\Models\KredensialKlinis;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class SipMonitoringService
@@ -75,6 +76,34 @@ class SipMonitoringService
             $selisih = $sip->hitungSisaHari();
             $userDokter = $sip->dokter?->user;
             $noWaDokter = $userDokter?->no_wa;
+
+            // Tahap 6: Proteksi Pelayanan - Masa Tenggang Administratif (Grace Period / On-Process)
+            // Selama masa dispensasi aktif berlangsung (status: dalam_proses), pelayanan klinis (SPK/RKK)
+            // tidak ditangguhkan mendadak dan sistem tidak mengirimkan peringatan penghentian/overdue.
+            if ($sip->status === 'dalam_proses' || $sip->isGracePeriodAktif()) {
+                $sisaDispensasi = $sip->hitungSisaHariDispensasi();
+
+                // Notifikasi peringatan dini H-3 sebelum masa tenggang berakhir
+                if ($sisaDispensasi <= 3 && $sisaDispensasi >= 0) {
+                    $harusKirim = $force || ! $sip->pernahDikirimNotifikasi('grace_period_warning', 'dokter');
+                    if ($harusKirim && $noWaDokter) {
+                        $res = $this->waService->kirimPengingatDispensasiH3($sip, $sisaDispensasi);
+                        if ($res['status']) {
+                            $notifDikirim++;
+                            $detailPengiriman[] = [
+                                'dokter' => $userDokter->nama,
+                                'nomor_sip' => $sip->nomor_sip,
+                                'selisih' => $sisaDispensasi,
+                                'eskalasi' => "Dokter (Dispensasi Berakhir dlm {$sisaDispensasi} Hari)",
+                                'penerima' => $userDokter->nama,
+                            ];
+                        }
+                    }
+                }
+
+                // Terproteksi: Lewati eskalasi reguler & penangguhan pelayanan
+                continue;
+            }
 
             // Tier 1: Sisa > 90 Hari (aktif - Hijau) -> Status aman; sistem TIDAK mengirimkan pesan
             if ($selisih > 90) {
@@ -218,8 +247,15 @@ class SipMonitoringService
         $sipDue = DokumenSip::where('status', 'due')->where('status_verifikasi', 'disetujui')->count();
         $sipCritical = DokumenSip::where('status', 'critical')->where('status_verifikasi', 'disetujui')->count();
         $sipOverdue = DokumenSip::where('status', 'overdue')->where('status_verifikasi', 'disetujui')->count();
+        $sipDalamProses = DokumenSip::where('status', 'dalam_proses')->count();
         $sipMenunggu = DokumenSip::where('status_verifikasi', 'menunggu')->count();
         $sipDitolak = DokumenSip::where('status_verifikasi', 'ditolak')->count();
+
+        // Statistik Tahap 6: Masa Tenggang Administratif (Grace Period)
+        $dispensasiDiajukan = DokumenSip::where('status_dispensasi', 'diajukan')->count();
+        $dispensasiAktif = DokumenSip::where('status_dispensasi', 'disetujui')
+            ->where('tanggal_akhir_dispensasi', '>=', Carbon::today())
+            ->count();
 
         $kredensialAktif = KredensialKlinis::where('status_kredensial', 'aktif')->count();
         $kredensialEvaluasi = KredensialKlinis::where('status_kredensial', 'evaluasi')->count();
@@ -242,6 +278,9 @@ class SipMonitoringService
             'sipDue',
             'sipCritical',
             'sipOverdue',
+            'sipDalamProses',
+            'dispensasiDiajukan',
+            'dispensasiAktif',
             'sipMenunggu',
             'sipDitolak',
             'kredensialAktif',

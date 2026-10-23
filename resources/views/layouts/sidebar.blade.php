@@ -78,6 +78,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('sdm.dispensasi.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'sdm.dispensasi') ? 'active' : '' }}">
+                        <i class="fa-solid fa-business-time me-2"></i>
+                        <span>Masa Tenggang (Grace Period)</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ route('sdm.ksm.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'sdm.ksm') ? 'active' : '' }}">
                         <i class="fa-solid fa-sitemap me-2"></i>
                         <span>Kelompok Staf Medis (KSM)</span>

@@ -76,10 +76,10 @@
                     <th>Nomor Izin SIP (DPMPTSP)</th>
                     <th>Fasyankes & Praktik</th>
                     <th>Prasyarat SKP</th>
-                    <th>Masa Berlaku</th>
-                    <th>Status Antrean</th>
-                    <th>Catatan Telaah</th>
-                    <th>Berkas PDF</th>
+                    <th>Masa Berlaku SIP</th>
+                    <th>Status Dispensasi (Grace Period)</th>
+                    <th>Status Antrean & Legalitas</th>
+                    <th class="text-end">Aksi & Berkas</th>
                 </tr>
             </thead>
             <tbody>
@@ -106,33 +106,79 @@
                         </td>
                         <td>
                             <div>{{ $item->tanggal_terbit ? $item->tanggal_terbit->format('d/m/Y') : '-' }} s.d</div>
-                            <small class="fw-bold text-dark">{{ $item->tanggal_kadaluarsa ? $item->tanggal_kadaluarsa->format('d/m/Y') : '-' }}</small>
+                            <div class="fw-bold text-dark">{{ $item->tanggal_kadaluarsa ? $item->tanggal_kadaluarsa->format('d/m/Y') : '-' }}</div>
+                            @php $sisa = $item->hitungSisaHari(); @endphp
+                            <small class="text-muted fs-3xs">
+                                {{ $sisa < 0 ? abs($sisa) . ' hr lalu' : 'sisa ' . $sisa . ' hr' }}
+                            </small>
                         </td>
                         <td>
-                            @if($item->status_verifikasi === 'disetujui')
+                            {!! $item->status_dispensasi_badge !!}
+                            @if($item->isGracePeriodAktif())
+                                @php $sisaDisp = $item->hitungSisaHariDispensasi(); @endphp
+                                <div class="mt-1">
+                                    <span class="badge bg-teal-subtle text-teal border border-teal-subtle fs-3xs">
+                                        <i class="fa-solid fa-shield-check me-1"></i> Terproteksi s.d {{ $item->tanggal_akhir_dispensasi->format('d/m/Y') }} (sisa {{ $sisaDisp }} hr)
+                                    </span>
+                                </div>
+                            @elseif($item->status_dispensasi === 'diajukan')
+                                <div class="fs-3xs text-muted mt-1">
+                                    <i class="fa-solid fa-receipt me-1 text-warning"></i> Resi: {{ $item->nomor_resi_proses }}
+                                </div>
+                            @elseif($item->status_dispensasi === 'ditolak' && $item->catatan_verifikasi_dispensasi)
+                                <div class="fs-3xs text-danger mt-1 fst-italic">
+                                    {{ Str::limit($item->catatan_verifikasi_dispensasi, 40) }}
+                                </div>
+                            @endif
+                        </td>
+                        <td>
+                            @if($item->status === 'dalam_proses')
+                                <span class="badge bg-teal text-white shadow-2xs fs-xs">
+                                    <i class="fa-solid fa-business-time me-1"></i> Dalam Proses
+                                </span>
+                            @elseif($item->status_verifikasi === 'disetujui')
                                 <span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i> Disetujui</span>
                             @elseif($item->status_verifikasi === 'ditolak')
                                 <span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Ditolak</span>
                             @else
                                 <span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-hourglass-half me-1"></i> Menunggu Verifikasi</span>
                             @endif
-                        </td>
-                        <td>
+
                             @if($item->catatan_verifikasi)
-                                <span class="text-secondary fs-xs fst-italic">{{ $item->catatan_verifikasi }}</span>
-                            @else
-                                <span class="text-muted fs-xs">-</span>
+                                <div class="text-secondary fs-3xs fst-italic mt-1">{{ Str::limit($item->catatan_verifikasi, 40) }}</div>
                             @endif
                         </td>
-                        <td>
-                            @if($item->file_sip)
-                                <a href="{{ asset('storage/' . $item->file_sip) }}" target="_blank" class="btn btn-xs btn-outline-primary d-inline-flex align-items-center gap-1">
-                                    <i class="fa-solid fa-file-pdf text-danger"></i>
-                                    <span>Lembar SIP</span>
-                                </a>
-                            @else
-                                <span class="text-muted fs-xs">-</span>
-                            @endif
+                        <td class="text-end">
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                <div class="btn-group btn-group-sm">
+                                    @if($item->file_sip)
+                                        <a href="{{ asset('storage/' . $item->file_sip) }}" target="_blank" class="btn btn-xs btn-outline-primary d-inline-flex align-items-center gap-1" title="Lembar SIP">
+                                            <i class="fa-solid fa-file-pdf text-danger"></i>
+                                            <span>Lembar SIP</span>
+                                        </a>
+                                    @endif
+
+                                    @if($item->file_bukti_proses)
+                                        <a href="{{ asset('storage/' . $item->file_bukti_proses) }}" target="_blank" class="btn btn-xs btn-outline-warning text-dark d-inline-flex align-items-center gap-1" title="Lihat Resi Pengurusan">
+                                            <i class="fa-solid fa-receipt text-warning"></i>
+                                            <span>Resi</span>
+                                        </a>
+                                    @endif
+                                </div>
+
+                                {{-- Tahap 6: Tombol Pengajuan Masa Tenggang Administratif --}}
+                                @if($item->isBisaAjukanDispensasi())
+                                    <a href="{{ route('dokter.dispensasi.create', $item->id) }}" class="btn btn-2xs btn-teal text-white d-inline-flex align-items-center gap-1 shadow-2xs mt-1" title="Unggah Resi / Suket Dalam Proses DPMPTSP">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                        <span>Ajukan Masa Tenggang</span>
+                                    </a>
+                                @elseif($item->isGracePeriodAktif())
+                                    <a href="{{ route('dokter.dispensasi.create', $item->id) }}" class="btn btn-2xs btn-outline-teal text-teal d-inline-flex align-items-center gap-1 mt-1" title="Perbarui Berkas Resi DPMPTSP">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span>Perbarui Resi</span>
+                                    </a>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty

@@ -45,9 +45,11 @@
             <div class="col-md-2">
                 <select name="status_sip" class="form-select form-select-sm">
                     <option value="">-- Status SIP --</option>
-                    <option value="aktif" {{ request('status_sip') == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                    <option value="due_soon" {{ request('status_sip') == 'due_soon' ? 'selected' : '' }}>Due Soon</option>
-                    <option value="due" {{ request('status_sip') == 'due' ? 'selected' : '' }}>Due (Kritis)</option>
+                    <option value="aktif" {{ request('status_sip') == 'aktif' ? 'selected' : '' }}>Aktif (>90 Hari)</option>
+                    <option value="due_soon" {{ request('status_sip') == 'due_soon' ? 'selected' : '' }}>Due Soon (H-90..60)</option>
+                    <option value="due" {{ request('status_sip') == 'due' ? 'selected' : '' }}>Due (H-30 Mendesak)</option>
+                    <option value="critical" {{ request('status_sip') == 'critical' ? 'selected' : '' }}>Critical (H-7 Kritis)</option>
+                    <option value="dalam_proses" {{ request('status_sip') == 'dalam_proses' ? 'selected' : '' }}>Dalam Proses (Grace Period)</option>
                     <option value="overdue" {{ request('status_sip') == 'overdue' ? 'selected' : '' }}>Overdue</option>
                 </select>
             </div>
@@ -133,13 +135,23 @@
                         </td>
                         <td>
                             @if($sip)
-                                @php $sisa = $sip->hitungSisaHari(); @endphp
-                                <span class="status-pill status-{{ $sip->status }} fs-xs">
-                                    {{ $sip->status_label }}
-                                </span>
-                                <div class="fs-xs text-muted mt-1">
-                                    {{ $sisa < 0 ? abs($sisa) . ' hr lalu' : 'sisa ' . $sisa . ' hr' }}
-                                </div>
+                                @if($sip->isGracePeriodAktif())
+                                    @php $sisaDisp = $sip->hitungSisaHariDispensasi(); @endphp
+                                    <span class="badge bg-teal text-white shadow-2xs fs-xs">
+                                        <i class="fa-solid fa-business-time me-1"></i> Dalam Proses
+                                    </span>
+                                    <div class="fs-xs text-teal fw-semibold mt-1">
+                                        Dispensasi: sisa {{ $sisaDisp }} hr
+                                    </div>
+                                @else
+                                    @php $sisa = $sip->hitungSisaHari(); @endphp
+                                    <span class="status-pill status-{{ $sip->status }} fs-xs">
+                                        {{ $sip->status_label }}
+                                    </span>
+                                    <div class="fs-xs text-muted mt-1">
+                                        {{ $sisa < 0 ? abs($sisa) . ' hr lalu' : 'sisa ' . $sisa . ' hr' }}
+                                    </div>
+                                @endif
                             @else
                                 <span class="badge bg-secondary-subtle text-secondary">Belum ada SIP</span>
                             @endif

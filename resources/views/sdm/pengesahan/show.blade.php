@@ -145,20 +145,34 @@
                 </div>
 
                 <div class="mb-3">
-                    <div class="text-muted fs-xs">Status Mesin Pelacak:</div>
-                    <div class="fw-semibold text-primary fs-xs">
-                        <i class="fa-solid fa-clock-rotate-left me-1"></i> Jatuh Tempo Aktif Terdaftar
-                    </div>
+                    <div class="text-muted fs-xs">Status Pelacakan & Dispensasi:</div>
+                    @if($sip?->isGracePeriodAktif())
+                        <div class="fw-semibold text-teal fs-xs">
+                            <i class="fa-solid fa-business-time me-1"></i> Grace Period Aktif (sisa {{ $sip->hitungSisaHariDispensasi() }} hr)
+                        </div>
+                        <div class="fs-3xs text-muted">Resi: {{ $sip->nomor_resi_proses }}</div>
+                    @else
+                        <div class="fw-semibold text-primary fs-xs">
+                            <i class="fa-solid fa-clock-rotate-left me-1"></i> Jatuh Tempo Aktif Terdaftar
+                        </div>
+                    @endif
                 </div>
 
                 <div class="pt-2 border-top d-flex justify-content-between align-items-center">
-                    @if($sip?->file_sip)
-                        <a href="{{ asset('storage/' . $sip->file_sip) }}" target="_blank" class="btn btn-xs btn-outline-primary">
-                            <i class="fa-solid fa-file-pdf me-1"></i> Pindaian SIP
-                        </a>
-                    @else
-                        <span class="fs-xs text-muted">Berkas SIP Terarsip</span>
-                    @endif
+                    <div class="btn-group btn-group-sm">
+                        @if($sip?->file_sip)
+                            <a href="{{ asset('storage/' . $sip->file_sip) }}" target="_blank" class="btn btn-xs btn-outline-primary">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Pindaian SIP
+                            </a>
+                        @else
+                            <span class="fs-xs text-muted">Berkas SIP Terarsip</span>
+                        @endif
+                        @if($sip?->file_bukti_proses)
+                            <a href="{{ asset('storage/' . $sip->file_bukti_proses) }}" target="_blank" class="btn btn-xs btn-outline-warning text-dark" title="Resi DPMPTSP">
+                                <i class="fa-solid fa-receipt text-warning"></i>
+                            </a>
+                        @endif
+                    </div>
                     <span class="badge bg-light text-secondary border fs-2xs">Terkunci</span>
                 </div>
             </div>

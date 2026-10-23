@@ -8,6 +8,7 @@ use App\Http\Controllers\Komite\VerifikasiSipController;
 use App\Http\Controllers\Komite\VerifikasiStrController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\NotifikasiController;
+use App\Http\Controllers\Sdm\DispensasiController;
 use App\Http\Controllers\Sdm\DokterController;
 use App\Http\Controllers\Sdm\KsmController;
 use App\Http\Controllers\Sdm\PengesahanDireksiController;
@@ -62,6 +63,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('pengesahan-direksi/{kredensial}/proses', [PengesahanDireksiController::class, 'store'])->name('pengesahan.store');
         Route::get('e-arsip/{dokter}', [PengesahanDireksiController::class, 'show'])->name('arsip.show');
         Route::get('e-arsip/{dokter}/cetak', [PengesahanDireksiController::class, 'cetak'])->name('arsip.cetak');
+
+        // Tahap 6: Alur Masa Tenggang Administratif (Grace Period / On-Process)
+        Route::get('dispensasi', [DispensasiController::class, 'index'])->name('dispensasi.index');
+        Route::get('dispensasi/{id}', [DispensasiController::class, 'show'])->name('dispensasi.show');
+        Route::post('dispensasi/{id}/verifikasi', [DispensasiController::class, 'verifikasi'])->name('dispensasi.verifikasi');
+        Route::post('dispensasi/{id}/akhiri', [DispensasiController::class, 'akhiri'])->name('dispensasi.akhiri');
     });
 
     // 3. Role Verifikator Komite Medik (dan Super Admin)
@@ -92,6 +99,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('pengajuan-sip', [PengajuanSipController::class, 'index'])->name('pengajuan.index');
         Route::get('pengajuan-sip/tambah', [PengajuanSipController::class, 'create'])->name('pengajuan.create');
         Route::post('pengajuan-sip', [PengajuanSipController::class, 'store'])->name('pengajuan.store');
+        Route::get('pengajuan-sip/{id}/dispensasi', [PengajuanSipController::class, 'createDispensasi'])->name('dispensasi.create');
+        Route::post('pengajuan-sip/{id}/dispensasi', [PengajuanSipController::class, 'storeDispensasi'])->name('dispensasi.store');
         Route::get('e-arsip', function () {
             $dokter = auth()->user()->dokter;
             if (! $dokter) {

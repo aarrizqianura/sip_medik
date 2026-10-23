@@ -205,9 +205,41 @@ class Dokter extends Model
         return $this->belongsTo(User::class, 'arsip_locked_by');
     }
 
+    /**
+     * Memeriksa apakah dokter sedang dalam masa tenggang administratif (Grace Period) yang aktif disetujui
+     */
+    public function hasActiveDispensasi(): bool
+    {
+        return $this->dokumenSip()
+            ->where('status_dispensasi', 'disetujui')
+            ->where('tanggal_akhir_dispensasi', '>=', Carbon::today())
+            ->exists();
+    }
+
+    /**
+     * Dapatkan dokumen SIP yang sedang dalam masa dispensasi aktif
+     */
+    public function getActiveDispensasiSip(): ?DokumenSip
+    {
+        return $this->dokumenSip()
+            ->where('status_dispensasi', 'disetujui')
+            ->where('tanggal_akhir_dispensasi', '>=', Carbon::today())
+            ->latest('tanggal_akhir_dispensasi')
+            ->first();
+    }
+
+    /**
+     * Proteksi Pelayanan Medis:
+     * Hak praktik dan wewenang klinis (SPK/RKK) tetap sah dan terproteksi selama masa dispensasi
+     */
+    public function isPelayananTerproteksi(): bool
+    {
+        return $this->hasActiveDispensasi() || $this->isAktifLegal();
+    }
+
     public function isAktifLegal(): bool
     {
-        return $this->status_praktik === 'AKTIF_LEGAL';
+        return $this->status_praktik === 'AKTIF_LEGAL' || ($this->hasActiveDispensasi() && $this->is_arsip_locked);
     }
 
     public function isArsipLengkapDanTerkunci(): bool
@@ -217,13 +249,20 @@ class Dokter extends Model
 
         return (bool) $this->is_str_locked
             && $this->status_verifikasi_str === 'tervalidasi'
-            && (bool) ($sip?->is_sip_locked || $sip?->status_verifikasi === 'disetujui')
+            && (bool) ($sip?->is_sip_locked || $sip?->status_verifikasi === 'disetujui' || $sip?->isGracePeriodAktif())
             && (bool) ($spk?->is_spk_locked || $spk?->status_kredensial === 'aktif')
-            && (bool) ($this->is_arsip_locked || $this->status_praktik === 'AKTIF_LEGAL');
+            && (bool) ($this->is_arsip_locked || $this->status_praktik === 'AKTIF_LEGAL' || $this->hasActiveDispensasi());
     }
 
     public function getStatusPraktikLabelAttribute(): string
     {
+        if ($this->hasActiveDispensasi()) {
+            $sip = $this->getActiveDispensasiSip();
+            $sisa = $sip ? $sip->hitungSisaHariDispensasi() : 0;
+
+            return "Hak Praktik Terproteksi (Grace Period - sisa {$sisa} hari)";
+        }
+
         return match ($this->status_praktik) {
             'AKTIF_LEGAL' => 'Hak Praktik Penuh (AKTIF_LEGAL)',
             'MENUNGGU_PENGESAHAN' => 'Menunggu SK Direktur',
@@ -235,6 +274,13 @@ class Dokter extends Model
 
     public function getStatusPraktikBadgeAttribute(): string
     {
+        if ($this->hasActiveDispensasi()) {
+            $sip = $this->getActiveDispensasiSip();
+            $sisa = $sip ? $sip->hitungSisaHariDispensasi() : 0;
+
+            return '<span class="badge bg-teal text-white shadow-xs px-2 py-1"><i class="fa-solid fa-user-shield me-1"></i> AKTIF_LEGAL (Dispensasi '.$sisa.' Hari)</span>';
+        }
+
         return match ($this->status_praktik) {
             'AKTIF_LEGAL' => '<span class="badge bg-success text-white shadow-xs px-2 py-1"><i class="fa-solid fa-shield-check me-1"></i> AKTIF_LEGAL</span>',
             'MENUNGGU_PENGESAHAN' => '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1"><i class="fa-solid fa-file-signature me-1"></i> Menunggu SK Direktur</span>',

@@ -109,8 +109,17 @@ class KredensialKlinis extends Model
         };
     }
 
+    public function isProteksiPelayananAktif(): bool
+    {
+        return (bool) $this->dokter?->hasActiveDispensasi();
+    }
+
     public function getStatusBadgeAttribute(): string
     {
+        if ($this->isProteksiPelayananAktif() && $this->status_kredensial === 'aktif') {
+            return '<span class="badge bg-teal text-white border border-teal"><i class="fa-solid fa-shield-check me-1"></i> SPK Terproteksi (Grace Period)</span>';
+        }
+
         return match ($this->status_kredensial) {
             'proses_rekredensial' => '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-clock-rotate-left me-1"></i> Proses Rekredensial</span>',
             'sidang_komite' => '<span class="badge bg-info-subtle text-info-emphasis border border-info"><i class="fa-solid fa-gavel me-1"></i> Sidang Kredensial</span>',

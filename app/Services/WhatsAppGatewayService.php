@@ -30,17 +30,23 @@ class WhatsAppGatewayService
             $pesan = $customPesan;
             $tingkatEskalasi = $sip->status ?? 'kustom';
         } else {
-            if ($selisih < 0) {
+            if ($sip->isGracePeriodAktif()) {
+                $sisaDispensasi = $sip->hitungSisaHariDispensasi();
+                $tglAkhirDispensasi = $sip->tanggal_akhir_dispensasi ? $sip->tanggal_akhir_dispensasi->translatedFormat('d F Y') : '-';
+                $statusTeks = "DALAM PROSES / GRACE PERIOD (Sisa {$sisaDispensasi} hari lagi)";
+                $himbauan = "🛡️ *PROTEKSI PELAYANAN MEDIS AKTIF (GRACE PERIOD)*\nResi tanda terima pengurusan SIP Anda (No. Resi: {$sip->nomor_resi_proses}) telah diverifikasi oleh Admin SDM.\nDispensasi berlaku s.d. *{$tglAkhirDispensasi}* ({$sip->durasi_dispensasi_hari} hari).\n\n*Wewenang klinis (SPK/RKK) Anda tetap sah dan aktif*. Mohon pantau terbitnya SIP definitif di DPMPTSP sebelum masa tenggang berakhir.";
+                $tingkatEskalasi = 'grace_period';
+            } elseif ($selisih < 0) {
                 $statusTeks = 'TELAH KEDALUWARSA ('.abs($selisih).' hari yang lalu)';
-                $himbauan = "⚠️ *PERINGATAN KEDALUWARSA*\nSesuai regulasi Pokja KPS dan Komite Medik, Anda dihimbau untuk *segera menghentikan pelayanan klinis mandiri* sampai penerbitan SIP baru disahkan.";
+                $himbauan = "⚠️ *PERINGATAN KEDALUWARSA*\nSesuai regulasi Pokja KPS dan Komite Medik, Anda dihimbau untuk *segera menghentikan pelayanan klinis mandiri* sampai penerbitan SIP baru disahkan atau mengajukan masa tenggang administratif dengan bukti resi pengurusan DPMPTSP.";
                 $tingkatEskalasi = 'overdue';
             } elseif ($selisih <= 7) {
                 $statusTeks = "🚨 KRITIS (H-7 / Sisa {$selisih} hari lagi)";
-                $himbauan = "🚨 *PERINGATAN KRITIS TAHAP AKHIR (H-7)*\nMasa berlaku SIP Anda tersisa *{$selisih} hari lagi* ({$tglKadaluarsa}). Sesuai regulasi Pokja KPS & Komite Medik, praktik kedokteran tanpa SIP aktif berisiko terhadap legalitas pelayanan.\n\n*Notifikasi ini telah dieskalasikan berjenjang langsung ke Staf Kepegawaian / SDM* untuk pendampingan mendesak.";
+                $himbauan = "🚨 *PERINGATAN KRITIS TAHAP AKHIR (H-7)*\nMasa berlaku SIP Anda tersisa *{$selisih} hari lagi* ({$tglKadaluarsa}). Sesuai regulasi Pokja KPS & Komite Medik, praktik kedokteran tanpa SIP aktif berisiko terhadap legalitas pelayanan.\n\n*Notifikasi ini telah dieskalasikan berjenjang langsung ke Staf Kepegawaian / SDM* untuk pendampingan mendesak. Jika izin sedang diproses di DPMPTSP/Dinkes, silakan segera mengunggah resi bukti proses untuk permohonan masa tenggang administratif.";
                 $tingkatEskalasi = 'critical';
             } elseif ($selisih <= 30) {
                 $statusTeks = "⚠️ MENDESAK (H-30 / Sisa {$selisih} hari lagi)";
-                $himbauan = "⚠️ *PERINGATAN MENDESAK (H-30)*\nSisa masa berlaku SIP Anda tersisa *{$selisih} hari lagi*. Mohon segera menindaklanjuti proses penerbitan perpanjangan di DPMPTSP dan mengunggah berkas SIP baru ke sistem SIM-SIP.\n\n*Salinan rekapitulasi pengingat ini telah diteruskan ke Admin SDM.*";
+                $himbauan = "⚠️ *PERINGATAN MENDESAK (H-30)*\nSisa masa berlaku SIP Anda tersisa *{$selisih} hari lagi*. Mohon segera menindaklanjuti proses penerbitan perpanjangan di DPMPTSP dan mengunggah berkas SIP baru atau Resi tanda terima ke sistem SIM-SIP.\n\n*Salinan rekapitulasi pengingat ini telah diteruskan ke Admin SDM.*";
                 $tingkatEskalasi = 'due';
             } elseif ($selisih <= 90) {
                 $statusTeks = "PENGINGAT PERTAMA (H-90 s.d. H-60 / Sisa {$selisih} hari lagi)";
@@ -273,6 +279,141 @@ class WhatsAppGatewayService
         if ($idUser) {
             Notifikasi::create([
                 'id_user' => $idUser,
+                'pesan' => $pesan,
+                'kanal' => 'whatsapp',
+                'status_terkirim' => $dispatch['status'],
+                'status_baca' => false,
+            ]);
+        }
+
+        return [
+            'status' => $dispatch['status'],
+            'info' => $dispatch['info'],
+            'pesan' => $pesan,
+        ];
+    }
+
+    /**
+     * Kirim notifikasi WhatsApp bahwa dispensasi masa tenggang telah disetujui Admin SDM
+     */
+    public function kirimPemberitahuanDispensasi(DokumenSip $sip, int $durasiHari, string $tanggalAkhir, ?string $catatan = null): array
+    {
+        $dokter = $sip->dokter;
+        $user = $dokter?->user;
+        $noWa = $user?->no_wa;
+
+        $pesan = "🛡️ *DISPENSASI MASA TENGGANG (GRACE PERIOD) DISETUJUI*\n";
+        $pesan .= "*RSUD dr. H. Moch. Ansari Saleh*\n";
+        $pesan .= "----------------------------------------\n\n";
+        $pesan .= "Yth. *{$user?->nama}*\n";
+        $pesan .= "KSM: *{$dokter?->ksm?->nama_ksm}*\n\n";
+        $pesan .= "Permohonan dispensasi masa tenggang administratif perizinan Anda telah *DIVERIFIKASI & DISETUJUI* oleh Admin SDM:\n";
+        $pesan .= "• No. SIP: *{$sip->nomor_sip}*\n";
+        $pesan .= "• No. Resi DPMPTSP/Dinkes: *{$sip->nomor_resi_proses}*\n";
+        $pesan .= "• Durasi Dispensasi: *{$durasiHari} Hari*\n";
+        $pesan .= "• Batas Akhir Grace Period: *{$tanggalAkhir}*\n";
+        $pesan .= "• Status SIP: *DALAM PROSES*\n\n";
+        if ($catatan) {
+            $pesan .= "Catatan SDM: {$catatan}\n\n";
+        }
+        $pesan .= "✅ *PROTEKSI PELAYANAN*: Status kewenangan klinis (SPK/RKK) Anda tetap *AKTIF* dan tidak ditangguhkan selama masa dispensasi berlangsung.\n\n";
+        $pesan .= "Mohon segera mengunggah berkas SIP definitif setelah terbit sebelum batas waktu di atas.\n\n";
+        $pesan .= '_Pesan resmi Bagian Kepegawaian SDM RSUD dr. H. Moch. Ansari Saleh_';
+
+        $dispatch = $this->dispatchWaMessage($noWa ?? '', $pesan);
+
+        if ($user) {
+            Notifikasi::create([
+                'id_user' => $user->id,
+                'id_sip' => $sip->id,
+                'tingkat_eskalasi' => 'grace_period',
+                'tipe_penerima' => 'dokter',
+                'pesan' => $pesan,
+                'kanal' => 'whatsapp',
+                'status_terkirim' => $dispatch['status'],
+                'status_baca' => false,
+                'metadata' => [
+                    'durasi_hari' => $durasiHari,
+                    'tanggal_akhir' => $tanggalAkhir,
+                    'status_dispensasi' => 'disetujui',
+                ],
+            ]);
+        }
+
+        return [
+            'status' => $dispatch['status'],
+            'info' => $dispatch['info'],
+            'pesan' => $pesan,
+        ];
+    }
+
+    /**
+     * Pengingat H-3 sebelum masa tenggang administratif berakhir
+     */
+    public function kirimPengingatDispensasiH3(DokumenSip $sip, int $sisaHari): array
+    {
+        $dokter = $sip->dokter;
+        $user = $dokter?->user;
+        $noWa = $user?->no_wa;
+        $tglAkhir = $sip->tanggal_akhir_dispensasi ? $sip->tanggal_akhir_dispensasi->translatedFormat('d F Y') : '-';
+
+        $pesan = "⚠️ *PENGINGAT MASA TENGGANG SEGERA BERAKHIR*\n";
+        $pesan .= "*RSUD dr. H. Moch. Ansari Saleh*\n";
+        $pesan .= "----------------------------------------\n\n";
+        $pesan .= "Yth. *{$user?->nama}*\n\n";
+        $pesan .= "Masa dispensasi administratif (Grace Period) untuk SIP No. *{$sip->nomor_sip}* tersisa *{$sisaHari} hari lagi* (jatuh tempo pada *{$tglAkhir}*).\n\n";
+        $pesan .= "Jika izin definitif dari DPMPTSP telah terbit, segera unggah salinan berkas ke sistem SIM-SIP untuk memperbarui legalitas hak praktik penuh Anda.\n\n";
+        $pesan .= "Sesuai tata kelola, bila masa tenggang berakhir tanpa SIP definitif, kewenangan klinis akan ditinjau kembali.\n\n";
+        $pesan .= '_Bagian Kepegawaian SDM RSUD dr. H. Moch. Ansari Saleh_';
+
+        $dispatch = $this->dispatchWaMessage($noWa ?? '', $pesan);
+
+        if ($user) {
+            Notifikasi::create([
+                'id_user' => $user->id,
+                'id_sip' => $sip->id,
+                'tingkat_eskalasi' => 'grace_period_warning',
+                'tipe_penerima' => 'dokter',
+                'pesan' => $pesan,
+                'kanal' => 'whatsapp',
+                'status_terkirim' => $dispatch['status'],
+                'status_baca' => false,
+            ]);
+        }
+
+        return [
+            'status' => $dispatch['status'],
+            'info' => $dispatch['info'],
+            'pesan' => $pesan,
+        ];
+    }
+
+    /**
+     * Notifikasi penolakan resi bukti proses dispensasi
+     */
+    public function kirimPenolakanDispensasi(DokumenSip $sip, string $alasan): array
+    {
+        $dokter = $sip->dokter;
+        $user = $dokter?->user;
+        $noWa = $user?->no_wa;
+
+        $pesan = "❌ *PEMBERITAHUAN VERIFIKASI DISPENSASI SIP*\n";
+        $pesan .= "*RSUD dr. H. Moch. Ansari Saleh*\n";
+        $pesan .= "----------------------------------------\n\n";
+        $pesan .= "Yth. *{$user?->nama}*\n\n";
+        $pesan .= "Pengajuan dispensasi masa tenggang administratif untuk SIP No. *{$sip->nomor_sip}* belum dapat disetujui oleh Bagian SDM.\n\n";
+        $pesan .= "Alasan Penolakan: *{$alasan}*\n\n";
+        $pesan .= "Silakan koordinasikan dengan Bagian SDM atau perbaiki bukti tanda terima proses perizinan Anda.\n\n";
+        $pesan .= '_Bagian Kepegawaian SDM RSUD dr. H. Moch. Ansari Saleh_';
+
+        $dispatch = $this->dispatchWaMessage($noWa ?? '', $pesan);
+
+        if ($user) {
+            Notifikasi::create([
+                'id_user' => $user->id,
+                'id_sip' => $sip->id,
+                'tingkat_eskalasi' => 'dispensasi_ditolak',
+                'tipe_penerima' => 'dokter',
                 'pesan' => $pesan,
                 'kanal' => 'whatsapp',
                 'status_terkirim' => $dispatch['status'],

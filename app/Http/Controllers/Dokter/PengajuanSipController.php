@@ -7,9 +7,19 @@ use App\Http\Requests\SipRequest;
 use App\Models\AuditLog;
 use App\Models\Dokter;
 use App\Models\DokumenSip;
+use App\Models\Notifikasi;
+use App\Models\User;
+use App\Services\WhatsAppGatewayService;
+use Illuminate\Http\Request;
 
 class PengajuanSipController extends Controller
 {
+    public function __construct(
+        protected ?WhatsAppGatewayService $waService = null
+    ) {
+        $this->waService = $waService ?: app(WhatsAppGatewayService::class);
+    }
+
     public function index()
     {
         $user = auth()->user();
@@ -20,7 +30,7 @@ class PengajuanSipController extends Controller
         }
 
         $isStrValid = $dokter->isStrValidDanTerkunci();
-        $sipList = $dokter->dokumenSip()->with('verifikator')->orderByDesc('created_at')->paginate(10);
+        $sipList = $dokter->dokumenSip()->with(['verifikator', 'dispensasiVerifikator'])->orderByDesc('created_at')->paginate(10);
 
         return view('dokter.pengajuan.index', compact('dokter', 'sipList', 'isStrValid'));
     }
@@ -121,5 +131,87 @@ class PengajuanSipController extends Controller
         }
 
         return view('sip.show', compact('sip'));
+    }
+
+    /**
+     * Tahap 6: Formulir Pengajuan Bukti Proses Perizinan DPMPTSP/Dinkes (Masa Tenggang)
+     */
+    public function createDispensasi(int $id)
+    {
+        $user = auth()->user();
+        $dokter = $user->dokter;
+
+        $sip = DokumenSip::with(['dokter.user', 'dokter.ksm'])->findOrFail($id);
+
+        if ($user->role === 'dokter' && (! $dokter || $sip->id_dokter !== $dokter->id)) {
+            abort(403, 'Anda tidak berhak mengakses berkas SIP ini.');
+        }
+
+        $targetDokter = $sip->dokter;
+
+        return view('dokter.pengajuan.dispensasi', compact('sip', 'targetDokter'));
+    }
+
+    /**
+     * Simpan Unggahan Resi Tanda Terima Pengurusan / Suket Dalam Proses
+     */
+    public function storeDispensasi(Request $request, int $id)
+    {
+        $user = auth()->user();
+        $dokter = $user->dokter;
+
+        $sip = DokumenSip::with(['dokter.user', 'dokter.ksm'])->findOrFail($id);
+
+        if ($user->role === 'dokter' && (! $dokter || $sip->id_dokter !== $dokter->id)) {
+            abort(403);
+        }
+
+        $targetDokter = $sip->dokter;
+
+        $validated = $request->validate([
+            'nomor_resi_proses' => 'required|string|max:150',
+            'instansi_penerbit_resi' => 'required|string|max:150',
+            'tanggal_pengajuan_resi' => 'required|date',
+            'durasi_dispensasi_diminta' => 'nullable|integer|min:14|max:30',
+            'file_bukti_proses' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'keterangan_proses' => 'nullable|string',
+        ]);
+
+        $file = $request->file('file_bukti_proses');
+        $fileName = 'resi_'.time().'_'.uniqid().'.'.$file->getClientOriginalExtension();
+        $filePath = $file->storeAs('bukti_proses', $fileName, 'public');
+
+        $sip->status_dispensasi = 'diajukan';
+        $sip->nomor_resi_proses = $validated['nomor_resi_proses'];
+        $sip->instansi_penerbit_resi = $validated['instansi_penerbit_resi'];
+        $sip->tanggal_pengajuan_resi = $validated['tanggal_pengajuan_resi'];
+        $sip->durasi_dispensasi_hari = (int) ($validated['durasi_dispensasi_diminta'] ?? 30);
+        $sip->file_bukti_proses = $filePath;
+        $sip->keterangan_proses = $validated['keterangan_proses'] ?? null;
+        $sip->save();
+
+        AuditLog::record(
+            'PENGAJUAN_DISPENSASI',
+            'Dispensasi Masa Tenggang',
+            "dr. {$targetDokter->user->nama} mengunggah bukti proses perizinan (Resi No. {$sip->nomor_resi_proses} di {$sip->instansi_penerbit_resi}) untuk SIP No. {$sip->nomor_sip}"
+        );
+
+        // Notifikasi ke Admin SDM
+        $adminSdmList = User::whereIn('role', ['admin_sdm', 'super_admin'])->where('aktif', true)->get();
+        foreach ($adminSdmList as $admin) {
+            Notifikasi::create([
+                'id_user' => $admin->id,
+                'id_sip' => $sip->id,
+                'tingkat_eskalasi' => 'pengajuan_dispensasi',
+                'tipe_penerima' => 'admin_sdm',
+                'pesan' => "Permohonan Masa Tenggang (Grace Period): dr. {$targetDokter->user->nama} mengunggah Resi {$sip->instansi_penerbit_resi} No. {$sip->nomor_resi_proses} untuk SIP No. {$sip->nomor_sip}. Menunggu verifikasi SDM.",
+                'kanal' => 'sistem',
+                'status_terkirim' => true,
+                'status_baca' => false,
+            ]);
+        }
+
+        return redirect()->route('dokter.pengajuan.index')
+            ->with('sukses', "Bukti proses perizinan (Resi No. {$sip->nomor_resi_proses}) berhasil diajukan! Bagian Kepegawaian SDM akan memverifikasi untuk pemberian dispensasi masa tenggang (Grace Period).");
     }
 }
