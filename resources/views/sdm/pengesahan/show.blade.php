@@ -32,7 +32,44 @@
     </div>
 </div>
 
-<!-- Banner Status Aktivasi Hak Praktik Penuh (AKTIF_LEGAL) -->
+<!-- Banner Status Aktivasi Hak Praktik Penuh / Penangguhan -->
+@if($dokter->isSuspended())
+<div class="card shadow-xs mb-4 border-danger">
+    <div class="card-body p-4 bg-danger-subtle rounded text-dark">
+        <div class="row align-items-center g-3">
+            <div class="col-md-8">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="avatar bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 56px; height: 56px; min-width: 56px;">
+                        <i class="fa-solid fa-ban fs-2"></i>
+                    </div>
+                    <div>
+                        <div class="fs-xs fw-bold text-uppercase text-danger tracking-wide">Status Otorisasi Medis (Pokja KPS)</div>
+                        <h4 class="fw-bold text-danger mb-1">WEWENANG KLINIS DITANGGUHKAN (AUTO-SUSPEND)</h4>
+                        <p class="fs-sm text-dark mb-0">
+                            Masa berlaku SIP dokter telah kedaluwarsa tanpa status dispensasi aktif. Sesuai Standar Akreditasi Pokja KPS & regulasi Komite Medik, <strong>seluruh instrumen SPK & RKK ditangguhkan secara otomatis</strong> dan dokter <strong>terblokir secara administratif dari tindakan klinis mandiri</strong> guna melindungi fasyankes dari tuntutan malpraktik.
+                        </p>
+                        @if($dokter->alasan_penangguhan)
+                            <div class="fs-xs text-danger mt-1"><em>Catatan Sistem: {{ $dokter->alasan_penangguhan }}</em></div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end border-start-md ps-md-4">
+                <div class="p-2 bg-white rounded border border-danger">
+                    <div class="fs-xs text-muted mb-1"><i class="fa-solid fa-lock text-danger me-1"></i>Status Integritas Berkas:</div>
+                    <div class="fw-bold text-danger fs-sm">OVERDUE & TERBLOKIR</div>
+                    <div class="fs-2xs text-secondary mt-1">
+                        Ditangguhkan sejak: {{ $dokter->suspended_at ? $dokter->suspended_at->translatedFormat('d F Y H:i') : date('d F Y H:i') }} WITA
+                    </div>
+                    <div class="fs-2xs text-danger mt-1">
+                        <i class="fa-solid fa-shield-halved me-1"></i>Masuk Staf Medis Non-Aktif Pelayanan
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@else
 <div class="card shadow-xs mb-4 border-success">
     <div class="card-body p-4 bg-success-subtle rounded text-dark">
         <div class="row align-items-center g-3">
@@ -67,6 +104,7 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- 4 Pilar Repositori Digital Kepegawaian (e-Arsip) -->
 <div class="row g-4 mb-4">

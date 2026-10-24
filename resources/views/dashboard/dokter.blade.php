@@ -23,7 +23,41 @@
     </div>
 </div>
 
-@if($dokter && $dokter->isAktifLegal())
+@if($dokter && $dokter->isSuspended())
+<div class="alert alert-danger border-start border-4 border-danger shadow-xs p-3 mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex align-items-start gap-3">
+            <div class="bg-danger text-white p-2 rounded-circle fs-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-danger text-white"><i class="fa-solid fa-lock me-1"></i> STATUS: OVERDUE & DITANGGUHKAN</span>
+                    <span class="badge bg-white text-danger border border-danger-subtle"><i class="fa-solid fa-triangle-exclamation me-1"></i> Tindakan Mandiri Terblokir</span>
+                </div>
+                <h6 class="fw-bold text-danger mb-1">Wewenang Tindakan Klinis Mandiri Anda Ditangguhkan Secara Administratif</h6>
+                <p class="fs-xs text-dark mb-0">
+                    Masa berlaku SIP Anda telah kedaluwarsa tanpa status dispensasi aktif. Sesuai Standar Akreditasi <strong>Pokja KPS</strong> dan regulasi Komite Medik RSUD dr. H. Moch. Ansari Saleh, instrumen <strong>Surat Penugasan Klinis (SPK) & RKK Anda DITANGGUHKAN</strong> guna melindungi fasyankes dan dokter dari risiko tuntutan malpraktik.
+                </p>
+                <div class="alert alert-warning py-1 px-2 mt-2 mb-0 fs-2xs d-inline-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-warning-emphasis"></i>
+                    <span><strong>Pemulihan Hak Praktik:</strong> Penangguhan wewenang klinis hanya dapat dicabut (re-activated) setelah Anda mengunggah fisik SIP definitif baru yang disahkan kembali melalui verifikasi Komite Medik (Tahap 3) dan SK Direktur (Tahap 4).</span>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex flex-column gap-2 text-nowrap">
+            <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-danger btn-sm fw-bold shadow-xs">
+                <i class="fa-solid fa-upload me-1"></i> Unggah SIP Definitif Baru (Tahap 2)
+            </a>
+            @if($sipAktif && $sipAktif->isBisaAjukanDispensasi())
+                <a href="{{ route('dokter.dispensasi.create', $sipAktif->id) }}" class="btn btn-outline-danger btn-sm fs-xs">
+                    <i class="fa-solid fa-file-invoice me-1"></i> Ajukan Dispensasi Resi (Tahap 6)
+                </a>
+            @endif
+        </div>
+    </div>
+</div>
+@elseif($dokter && $dokter->isAktifLegal())
 <div class="alert alert-success border-success shadow-xs d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
     <div class="d-flex align-items-center gap-3">
         <i class="fa-solid fa-shield-check fs-2 text-success"></i>

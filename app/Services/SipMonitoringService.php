@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\AuditLog;
 use App\Models\Dokter;
 use App\Models\DokumenSip;
 use App\Models\KredensialKlinis;
+use App\Models\Notifikasi;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -68,6 +70,9 @@ class SipMonitoringService
         if ($adminSdmList->isEmpty()) {
             $adminSdmList = User::where('role', 'super_admin')->where('aktif', true)->get();
         }
+
+        $direkturList = User::where('role', 'super_admin')->where('aktif', true)->get();
+        $komiteMedikList = User::where('role', 'verifikator_komite')->where('aktif', true)->get();
 
         $notifDikirim = 0;
         $detailPengiriman = [];
@@ -209,19 +214,16 @@ class SipMonitoringService
                 continue;
             }
 
-            // Pengingat mingguan jika sudah kadaluarsa
-            if ($selisih < 0 && $selisih % 7 === 0 && $noWaDokter) {
-                $res = $this->waService->kirimPeringatan($sip);
-                if ($res['status']) {
-                    $notifDikirim++;
-                    $detailPengiriman[] = [
-                        'dokter' => $userDokter->nama,
-                        'nomor_sip' => $sip->nomor_sip,
-                        'selisih' => $selisih,
-                        'eskalasi' => 'Dokter (Peringatan Kedaluwarsa)',
-                        'penerima' => $userDokter->nama,
-                    ];
-                }
+            // Tahap 7: Mitigasi Otomatis saat Kedaluwarsa (Overdue & Auto-Suspend Wewenang Klinis)
+            // Kunci Status Kedaluwarsa: Jika sisa_hari <= 0 dan dokter tidak memiliki status dispensasi aktif,
+            // sistem otomatis mengunci status SIP menjadi overdue (Merah), SPK & RKK beralih ke DITANGGUHKAN,
+            // dan wewenang tindakan klinis mandiri terblokir.
+            if ($selisih <= 0) {
+                $resEskalasi = $this->eksekusiAutoSuspendDanEskalasi($sip, $force, $direkturList, $komiteMedikList, $adminSdmList);
+                $notifDikirim += $resEskalasi['notif_dikirim'];
+                $detailPengiriman = array_merge($detailPengiriman, $resEskalasi['detail']);
+
+                continue;
             }
         }
 
@@ -231,6 +233,126 @@ class SipMonitoringService
             'total_diperiksa' => $dokumenList->count(),
             'notifikasi_dikirim' => $notifDikirim,
             'detail' => $detailPengiriman,
+        ];
+    }
+
+    /**
+     * Tahap 7: Eksekusi Mitigasi Otomatis & Eskalasi Insiden Darurat
+     */
+    public function eksekusiAutoSuspendDanEskalasi(
+        DokumenSip $sip,
+        bool $force = false,
+        $direkturList = null,
+        $komiteMedikList = null,
+        $adminSdmList = null
+    ): array {
+        $notifDikirim = 0;
+        $detail = [];
+
+        // 1. Kunci status SIP ke overdue
+        $sip->status = 'overdue';
+        $sip->tingkat_eskalasi = 'kedaluwarsa';
+        $sip->is_overdue_locked = true;
+        if (! $sip->overdue_locked_at) {
+            $sip->overdue_locked_at = Carbon::now();
+        }
+        $sip->save();
+
+        // 2. Penangguhan Otomatis (Auto-Suspend Wewenang Klinis)
+        $dokter = $sip->dokter;
+        if ($dokter) {
+            $dokter->autoSuspendWewenangKlinis($sip);
+        }
+
+        $userDokter = $dokter?->user;
+        $selisih = $sip->hitungSisaHari();
+
+        // Siapkan stakeholders jika belum di-pass
+        $direkturList = $direkturList ?: User::where('role', 'super_admin')->where('aktif', true)->get();
+        $komiteMedikList = $komiteMedikList ?: User::where('role', 'verifikator_komite')->where('aktif', true)->get();
+        $adminSdmList = $adminSdmList ?: User::where('role', 'admin_sdm')->where('aktif', true)->get();
+
+        // 3. Eskalasi Insiden Darurat ke Dashboard & WhatsApp
+        // a. Ke Dokter bersangkutan
+        $harusKirimDokter = $force || ! $sip->pernahDikirimNotifikasi('darurat_overdue', 'dokter');
+        if ($harusKirimDokter && $userDokter) {
+            $res = $this->waService->kirimPeringatanDaruratOverdue($sip, $userDokter, 'dokter');
+            if ($res['status']) {
+                $notifDikirim++;
+                $detail[] = [
+                    'dokter' => $userDokter->nama,
+                    'nomor_sip' => $sip->nomor_sip,
+                    'selisih' => $selisih,
+                    'eskalasi' => 'Dokter (Peringatan Darurat: Wewenang Klinis Ditangguhkan)',
+                    'penerima' => $userDokter->nama,
+                ];
+            }
+        }
+
+        // b. Ke Direktur (super_admin)
+        foreach ($direkturList as $direktur) {
+            $harusKirimDir = $force || ! $sip->pernahDikirimNotifikasi('darurat_overdue', 'direktur');
+            if ($harusKirimDir) {
+                $res = $this->waService->kirimPeringatanDaruratOverdue($sip, $direktur, 'direktur');
+                if ($res['status']) {
+                    $notifDikirim++;
+                    $detail[] = [
+                        'dokter' => $userDokter?->nama ?? '-',
+                        'nomor_sip' => $sip->nomor_sip,
+                        'selisih' => $selisih,
+                        'eskalasi' => 'Direktur (Eskalasi Darurat Insiden Overdue Akreditasi KPS)',
+                        'penerima' => $direktur->nama,
+                    ];
+                }
+            }
+        }
+
+        // c. Ke Ketua Komite Medik (verifikator_komite)
+        foreach ($komiteMedikList as $komite) {
+            $harusKirimKomite = $force || ! $sip->pernahDikirimNotifikasi('darurat_overdue', 'komite_medik');
+            if ($harusKirimKomite) {
+                $res = $this->waService->kirimPeringatanDaruratOverdue($sip, $komite, 'komite_medik');
+                if ($res['status']) {
+                    $notifDikirim++;
+                    $detail[] = [
+                        'dokter' => $userDokter?->nama ?? '-',
+                        'nomor_sip' => $sip->nomor_sip,
+                        'selisih' => $selisih,
+                        'eskalasi' => 'Ketua Komite Medik (Eskalasi Darurat: Penangguhan SPK & RKK)',
+                        'penerima' => $komite->nama,
+                    ];
+                }
+            }
+        }
+
+        // d. Ke Bagian Kepegawaian SDM (admin_sdm)
+        foreach ($adminSdmList as $sdm) {
+            $harusKirimSdm = $force || ! $sip->pernahDikirimNotifikasi('darurat_overdue', 'admin_sdm');
+            if ($harusKirimSdm) {
+                $res = $this->waService->kirimPeringatanDaruratOverdue($sip, $sdm, 'admin_sdm');
+                if ($res['status']) {
+                    $notifDikirim++;
+                    $detail[] = [
+                        'dokter' => $userDokter?->nama ?? '-',
+                        'nomor_sip' => $sip->nomor_sip,
+                        'selisih' => $selisih,
+                        'eskalasi' => 'Bagian SDM (Eskalasi Darurat: Staf Medis Non-Aktif Pelayanan)',
+                        'penerima' => $sdm->nama,
+                    ];
+                }
+            }
+        }
+
+        // Catat di Audit Log jika belum tercatat hari ini
+        AuditLog::record(
+            'AUTO_SUSPEND_OVERDUE',
+            'Mitigasi Kedaluwarsa & Auto-Suspend',
+            "Mitigasi Otomatis (Tahap 7): SIP No. {$sip->nomor_sip} dr. {$userDokter?->nama} KEDALUWARSA. Status SIP dikunci overdue, instrumen SPK & RKK dialihkan ke DITANGGUHKAN, wewenang tindakan klinis mandiri terblokir, dan eskalasi darurat dikirim ke Direktur, Ketua Komite Medik, dan Bagian SDM."
+        );
+
+        return [
+            'notif_dikirim' => $notifDikirim,
+            'detail' => $detail,
         ];
     }
 
@@ -270,6 +392,13 @@ class SipMonitoringService
             ->count();
         $arsipTerkunci = Dokter::where('is_arsip_locked', true)->count();
 
+        // Statistik Tahap 7: Mitigasi Otomatis saat Kedaluwarsa (Overdue & Auto-Suspend)
+        $dokterDitangguhkan = Dokter::where('status_praktik', 'DITANGGUHKAN')->count();
+        $kredensialDitangguhkan = KredensialKlinis::where('status_kredensial', 'ditangguhkan')->count();
+        $stafMedisNonAktifPelayanan = Dokter::where('status_praktik', 'DITANGGUHKAN')
+            ->orWhereHas('sipTerbaru', fn ($q) => $q->where('status', 'overdue'))
+            ->count();
+
         return compact(
             'totalDokter',
             'totalSip',
@@ -290,7 +419,10 @@ class SipMonitoringService
             'kredensialRekomendasiTerbit',
             'dokterAktifLegal',
             'dokterMenungguPengesahan',
-            'arsipTerkunci'
+            'arsipTerkunci',
+            'dokterDitangguhkan',
+            'kredensialDitangguhkan',
+            'stafMedisNonAktifPelayanan'
         );
     }
 }

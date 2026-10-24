@@ -36,6 +36,8 @@ class Dokter extends Model
         'satusehat_verified_at',
         'satusehat_data',
         'status_praktik',
+        'suspended_at',
+        'alasan_penangguhan',
         'is_arsip_locked',
         'arsip_locked_at',
         'arsip_locked_by',
@@ -51,6 +53,7 @@ class Dokter extends Model
         'tanggal_sk_direktur' => 'date',
         'verified_str_at' => 'datetime',
         'arsip_locked_at' => 'datetime',
+        'suspended_at' => 'datetime',
         'satusehat_verified_at' => 'datetime',
         'satusehat_data' => 'array',
         'is_str_locked' => 'boolean',
@@ -229,21 +232,126 @@ class Dokter extends Model
     }
 
     /**
+     * Tahap 7: Mitigasi Otomatis saat Kedaluwarsa (Auto-Suspend Wewenang Klinis)
+     * Mengunci status praktik dokter menjadi DITANGGUHKAN dan memblokir wewenang tindakan klinis mandiri.
+     */
+    public function autoSuspendWewenangKlinis(?DokumenSip $sip = null): void
+    {
+        // Jika sedang memiliki masa tenggang administratif aktif disetujui, proteksi pelayanan aktif
+        if ($this->hasActiveDispensasi()) {
+            return;
+        }
+
+        $sipNomor = $sip?->nomor_sip ?? ($this->sipTerbaru?->nomor_sip ?? '-');
+        $alasan = "Penangguhan otomatis wewenang klinis (Auto-Suspend) akibat kedaluwarsa SIP No. {$sipNomor}. Dokter terblokir secara administratif dari wewenang tindakan klinis mandiri demi kepatuhan Pokja KPS dan proteksi risiko malpraktik.";
+
+        $this->status_praktik = 'DITANGGUHKAN';
+        $this->suspended_at = Carbon::now();
+        $this->alasan_penangguhan = $alasan;
+        $this->save();
+
+        // Alihkan seluruh instrumen SPK dan RKK menjadi DITANGGUHKAN
+        $this->kredensialKlinis()
+            ->whereIn('status_kredensial', ['aktif', 'evaluasi', 'rekomendasi_terbit'])
+            ->update([
+                'status_kredensial' => 'ditangguhkan',
+                'is_suspended' => true,
+                'suspended_at' => Carbon::now(),
+                'alasan_penangguhan' => $alasan,
+            ]);
+    }
+
+    /**
+     * Tahap 7: Pemulihan Hak Praktik (Re-aktivasi)
+     * Penangguhan wewenang klinis dicabut setelah verifikasi & pengesahan SIP definitif (Tahap 2, 3, 4).
+     */
+    public function pulihkanWewenangKlinis(string $nomorSk = '', ?string $catatan = null): void
+    {
+        $this->status_praktik = 'AKTIF_LEGAL';
+        $this->suspended_at = null;
+        $this->alasan_penangguhan = null;
+        $this->is_arsip_locked = true;
+        if ($nomorSk) {
+            $this->nomor_sk_direktur = $nomorSk;
+        }
+        if ($catatan) {
+            $this->catatan_pengesahan_direksi = $catatan;
+        }
+        $this->save();
+
+        // Aktifkan kembali instrumen SPK & RKK yang sebelumnya ditangguhkan
+        $this->kredensialKlinis()
+            ->where('is_suspended', true)
+            ->update([
+                'status_kredensial' => 'aktif',
+                'is_suspended' => false,
+                'suspended_at' => null,
+                'alasan_penangguhan' => null,
+            ]);
+    }
+
+    public function isSuspended(): bool
+    {
+        if ($this->hasActiveDispensasi()) {
+            return false;
+        }
+
+        if ($this->status_praktik === 'DITANGGUHKAN') {
+            return true;
+        }
+
+        // Jika instrumen SPK masih berstatus ditangguhkan (menunggu pemulihan SK Direktur)
+        $spk = $this->spkTerbaru ?: $this->kredensialTerbaru;
+        if ($spk && $spk->is_suspended) {
+            return true;
+        }
+
+        $sip = $this->sipTerbaru;
+        if ($sip && $sip->hitungSisaHari() <= 0 && ! $sip->isGracePeriodAktif()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isWewenangMandiriDiblokir(): bool
+    {
+        return $this->isSuspended();
+    }
+
+    public function hasWewenangKlinisMandiri(): bool
+    {
+        return ! $this->isWewenangMandiriDiblokir();
+    }
+
+    /**
      * Proteksi Pelayanan Medis:
      * Hak praktik dan wewenang klinis (SPK/RKK) tetap sah dan terproteksi selama masa dispensasi
      */
     public function isPelayananTerproteksi(): bool
     {
+        if ($this->isSuspended()) {
+            return false;
+        }
+
         return $this->hasActiveDispensasi() || $this->isAktifLegal();
     }
 
     public function isAktifLegal(): bool
     {
+        if ($this->isSuspended()) {
+            return false;
+        }
+
         return $this->status_praktik === 'AKTIF_LEGAL' || ($this->hasActiveDispensasi() && $this->is_arsip_locked);
     }
 
     public function isArsipLengkapDanTerkunci(): bool
     {
+        if ($this->isSuspended()) {
+            return false;
+        }
+
         $spk = $this->spkTerbaru ?: $this->kredensialTerbaru;
         $sip = $this->sipTerbaru;
 
@@ -256,6 +364,10 @@ class Dokter extends Model
 
     public function getStatusPraktikLabelAttribute(): string
     {
+        if ($this->isSuspended()) {
+            return 'DITANGGUHKAN (Auto-Suspend: Pelayanan Mandiri Terblokir)';
+        }
+
         if ($this->hasActiveDispensasi()) {
             $sip = $this->getActiveDispensasiSip();
             $sisa = $sip ? $sip->hitungSisaHariDispensasi() : 0;
@@ -267,13 +379,17 @@ class Dokter extends Model
             'AKTIF_LEGAL' => 'Hak Praktik Penuh (AKTIF_LEGAL)',
             'MENUNGGU_PENGESAHAN' => 'Menunggu SK Direktur',
             'NONAKTIF' => 'Non-Aktif / Ditangguhkan',
-            'DITANGGUHKAN' => 'Ditangguhkan (Peringatan Legal)',
+            'DITANGGUHKAN' => 'DITANGGUHKAN (Auto-Suspend: Pelayanan Mandiri Terblokir)',
             default => 'Belum Lengkap',
         };
     }
 
     public function getStatusPraktikBadgeAttribute(): string
     {
+        if ($this->isSuspended()) {
+            return '<span class="badge bg-danger text-white border border-danger shadow-xs px-2 py-1"><i class="fa-solid fa-ban me-1"></i> DITANGGUHKAN (Auto-Suspend)</span>';
+        }
+
         if ($this->hasActiveDispensasi()) {
             $sip = $this->getActiveDispensasiSip();
             $sisa = $sip ? $sip->hitungSisaHariDispensasi() : 0;
@@ -285,7 +401,7 @@ class Dokter extends Model
             'AKTIF_LEGAL' => '<span class="badge bg-success text-white shadow-xs px-2 py-1"><i class="fa-solid fa-shield-check me-1"></i> AKTIF_LEGAL</span>',
             'MENUNGGU_PENGESAHAN' => '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1"><i class="fa-solid fa-file-signature me-1"></i> Menunggu SK Direktur</span>',
             'NONAKTIF' => '<span class="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1"><i class="fa-solid fa-ban me-1"></i> Non-Aktif</span>',
-            'DITANGGUHKAN' => '<span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> Ditangguhkan</span>',
+            'DITANGGUHKAN' => '<span class="badge bg-danger text-white border border-danger shadow-xs px-2 py-1"><i class="fa-solid fa-ban me-1"></i> DITANGGUHKAN (Auto-Suspend)</span>',
             default => '<span class="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1"><i class="fa-solid fa-file-circle-exclamation me-1"></i> Belum Lengkap</span>',
         };
     }

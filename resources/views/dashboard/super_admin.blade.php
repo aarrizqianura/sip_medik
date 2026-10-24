@@ -20,8 +20,32 @@
             <i class="fa-solid fa-sliders"></i>
             <span>Konfigurasi Sistem</span>
         </a>
+</div>
+
+@if(isset($dokterDitangguhkanList) && $dokterDitangguhkanList->isNotEmpty())
+<div class="alert alert-danger border-start border-4 border-danger shadow-xs p-3 mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-danger text-white"><i class="fa-solid fa-bell me-1"></i> ESKALASI DARURAT DIREKSI</span>
+            <h6 class="fw-bold text-danger mb-0">Mitigasi Otomatis (Tahap 7): {{ $dokterDitangguhkanList->count() }} Staf Medis Ditangguhkan Wewenang Klinis</h6>
+        </div>
+        <a href="{{ route('sdm.laporan.index', ['jenis' => '2']) }}" class="btn btn-danger btn-sm fs-xs">
+            <i class="fa-solid fa-file-shield me-1"></i> Buka Laporan Akreditasi KPS
+        </a>
+    </div>
+    <p class="fs-sm text-dark mb-2">
+        Sistem mendeteksi staf medis yang masa berlaku SIP-nya telah kedaluwarsa (&le; 0 hari) tanpa dispensasi aktif. Sesuai standar tata kelola medis rumah sakit & standar Pokja KPS, <strong>status instrumen SPK dan RKK secara otomatis beralih menjadi DITANGGUHKAN</strong> dan dokter <strong>terblokir secara administratif dari wewenang tindakan klinis mandiri</strong> guna melindungi fasyankes dari tuntutan hukum/malpraktik.
+    </p>
+    <div class="d-flex flex-wrap gap-2 mt-2">
+        @foreach($dokterDitangguhkanList as $dokTangguh)
+            <span class="badge bg-white text-danger border border-danger-subtle p-2 fs-xs d-inline-flex align-items-center gap-2">
+                <i class="fa-solid fa-user-xmark"></i>
+                <strong>{{ $dokTangguh->user->nama ?? '-' }}</strong> ({{ $dokTangguh->ksm->nama_ksm ?? '-' }}) &bull; SIP Exp: {{ $dokTangguh->sipTerbaru?->tanggal_kadaluarsa ? $dokTangguh->sipTerbaru->tanggal_kadaluarsa->format('d/m/Y') : '-' }} &bull; <em>Wewenang Mandiri Terblokir</em>
+            </span>
+        @endforeach
     </div>
 </div>
+@endif
 
 <!-- 4 Key Metrics Cards -->
 <div class="row g-3 mb-4">

@@ -145,12 +145,21 @@
                                     </div>
                                 @else
                                     @php $sisa = $sip->hitungSisaHari(); @endphp
-                                    <span class="status-pill status-{{ $sip->status }} fs-xs">
-                                        {{ $sip->status_label }}
-                                    </span>
-                                    <div class="fs-xs text-muted mt-1">
-                                        {{ $sisa < 0 ? abs($sisa) . ' hr lalu' : 'sisa ' . $sisa . ' hr' }}
-                                    </div>
+                                    @if($sip->status === 'overdue' || $sisa <= 0)
+                                        <span class="badge bg-danger text-white shadow-2xs fs-xs">
+                                            <i class="fa-solid fa-lock me-1"></i> Overdue (Terkunci)
+                                        </span>
+                                        <div class="fs-xs text-danger fw-semibold mt-1">
+                                            {{ abs($sisa) }} hr yang lalu
+                                        </div>
+                                    @else
+                                        <span class="status-pill status-{{ $sip->status }} fs-xs">
+                                            {{ $sip->status_label }}
+                                        </span>
+                                        <div class="fs-xs text-muted mt-1">
+                                            sisa {{ $sisa }} hr
+                                        </div>
+                                    @endif
                                 @endif
                             @else
                                 <span class="badge bg-secondary-subtle text-secondary">Belum ada SIP</span>
@@ -158,7 +167,9 @@
                         </td>
                         <td>
                             {!! $dok->status_praktik_badge !!}
-                            @if($dok->is_arsip_locked)
+                            @if($dok->isSuspended())
+                                <div class="fs-3xs text-danger mt-1"><i class="fa-solid fa-shield-xmark me-1"></i>Tindakan Mandiri Terblokir</div>
+                            @elseif($dok->is_arsip_locked)
                                 <div class="fs-3xs text-success mt-1"><i class="fa-solid fa-lock me-1"></i>e-Arsip Dikunci</div>
                             @endif
                         </td>

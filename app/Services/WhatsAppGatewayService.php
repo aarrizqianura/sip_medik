@@ -427,4 +427,62 @@ class WhatsAppGatewayService
             'pesan' => $pesan,
         ];
     }
+
+    /**
+     * Tahap 7: Eskalasi Insiden Darurat Kedaluwarsa & Auto-Suspend
+     * Dikirim langsung ke Direktur, Ketua Komite Medik, Bagian SDM, dan Dokter bersangkutan
+     */
+    public function kirimPeringatanDaruratOverdue(DokumenSip $sip, User $penerima, string $rolePenerima = 'direktur'): array
+    {
+        $dokter = $sip->dokter;
+        $userDokter = $dokter?->user;
+        $noWa = $penerima->no_wa;
+        $tglKadaluarsa = $sip->tanggal_kadaluarsa ? $sip->tanggal_kadaluarsa->translatedFormat('d F Y') : '-';
+        $selisih = abs($sip->hitungSisaHari());
+
+        $headerPenerima = match ($rolePenerima) {
+            'direktur' => 'Yth. Direktur RSUD dr. H. Moch. Ansari Saleh',
+            'komite_medik' => 'Yth. Ketua Komite Medik',
+            'admin_sdm' => 'Yth. Kepala Bagian Kepegawaian & SDM',
+            default => "Yth. {$penerima->nama}",
+        };
+
+        $pesan = "🚨 *ESKALASI INSIDEN DARURAT: AUTO-SUSPEND SIP OVERDUE*\n";
+        $pesan .= "*RSUD dr. H. Moch. Ansari Saleh*\n";
+        $pesan .= "----------------------------------------\n\n";
+        $pesan .= "{$headerPenerima},\n\n";
+        $pesan .= "Sistem mendeteksi bahwa masa berlaku SIP staf medis berikut telah *KEDALUWARSA (OVERDUE)* dan tidak memiliki status dispensasi aktif:\n\n";
+        $pesan .= "• *Nama Dokter*: {$userDokter?->nama}\n";
+        $pesan .= '• *NIP / NRP*: '.($dokter?->nip_nrp ?? '-')."\n";
+        $pesan .= '• *Spesialisasi*: '.($dokter?->spesialisasi ?? '-')."\n";
+        $pesan .= "• *Nomor SIP*: {$sip->nomor_sip}\n";
+        $pesan .= "• *Tanggal Jatuh Tempo*: {$tglKadaluarsa} ({$selisih} hari yang lalu)\n\n";
+        $pesan .= "⛔ *TINDAKAN MITIGASI OTOMATIS (TAHAP 7)*:\n";
+        $pesan .= "1. Status SIP resmi *DIKUNCI OVERDUE* (Merah).\n";
+        $pesan .= "2. Status instrumen SPK & RKK otomatis beralih menjadi *DITANGGUHKAN (SUSPENDED)*.\n";
+        $pesan .= "3. Dokter *TERBLOKIR SECARA ADMINISTRATIF* dari wewenang tindakan klinis mandiri.\n";
+        $pesan .= "4. Nama dokter otomatis dimasukkan ke *Daftar Staf Medis Non-Aktif Pelayanan* pada Laporan Monitoring Akreditasi Pokja KPS guna mencegah temuan audit eksternal serta melindungi fasyankes dari tuntutan malpraktik.\n\n";
+        $pesan .= "💡 *PEMULIHAN HAK PRAKTIK*:\n";
+        $pesan .= "Penangguhan wewenang klinis hanya dapat dicabut (re-activated) setelah dokter mengunggah fisik SIP definitif yang disahkan kembali melalui alur Tahap 2, 3, dan 4.\n\n";
+        $pesan .= '_Sistem Informasi Manajemen SIP & Kredensial Medis RSUD Ansari Saleh_';
+
+        $dispatch = $this->dispatchWaMessage($noWa ?? '', $pesan);
+
+        Notifikasi::create([
+            'id_user' => $penerima->id,
+            'id_sip' => $sip->id,
+            'tingkat_eskalasi' => 'darurat_overdue',
+            'tipe_penerima' => $rolePenerima,
+            'pesan' => $pesan,
+            'kanal' => 'whatsapp',
+            'status_terkirim' => $dispatch['status'],
+            'status_baca' => false,
+        ]);
+
+        return [
+            'status' => $dispatch['status'],
+            'info' => $dispatch['info'],
+            'pesan' => $pesan,
+        ];
+    }
 }

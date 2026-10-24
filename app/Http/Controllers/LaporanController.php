@@ -9,6 +9,7 @@ use App\Models\Ksm;
 use App\Models\Notifikasi;
 use App\Models\PengaturanSistem;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class LaporanController extends Controller
@@ -20,7 +21,22 @@ class LaporanController extends Controller
 
         $data = $this->ambilDataLaporan($jenis, $request);
 
-        return view('laporan.index', compact('jenis', 'ksmList', 'data'));
+        // Tahap 7: Daftar Staf Medis Non-Aktif Pelayanan (Audit Akreditasi Pokja KPS)
+        $stafNonAktifPelayanan = Dokter::with(['user', 'ksm', 'sipTerbaru', 'spkTerbaru'])
+            ->where(function ($q) {
+                $q->where('status_praktik', 'DITANGGUHKAN')
+                    ->orWhereHas('dokumenSip', function ($sub) {
+                        $sub->where('status', 'overdue')
+                            ->where(function ($sub2) {
+                                $sub2->whereNull('status_dispensasi')
+                                    ->orWhere('status_dispensasi', '!=', 'disetujui')
+                                    ->orWhere('tanggal_akhir_dispensasi', '<', Carbon::today());
+                            });
+                    });
+            })
+            ->get();
+
+        return view('laporan.index', compact('jenis', 'ksmList', 'data', 'stafNonAktifPelayanan'));
     }
 
     protected function ambilDataLaporan(string $jenis, Request $request)
@@ -124,6 +140,21 @@ class LaporanController extends Controller
         $rsAlamat = PengaturanSistem::get('alamat_fasyankes', 'Jl. Brigjend H. Hasan Basry No. 1, Banjarmasin, Kalimantan Selatan');
         $rsTelepon = PengaturanSistem::get('telepon_fasyankes', '(0511) 3300757 / 3300758');
 
+        // Tahap 7: Daftar Staf Medis Non-Aktif Pelayanan untuk Lampiran Akreditasi Pokja KPS
+        $stafNonAktifPelayanan = Dokter::with(['user', 'ksm', 'sipTerbaru', 'spkTerbaru'])
+            ->where(function ($q) {
+                $q->where('status_praktik', 'DITANGGUHKAN')
+                    ->orWhereHas('dokumenSip', function ($sub) {
+                        $sub->where('status', 'overdue')
+                            ->where(function ($sub2) {
+                                $sub2->whereNull('status_dispensasi')
+                                    ->orWhere('status_dispensasi', '!=', 'disetujui')
+                                    ->orWhere('tanggal_akhir_dispensasi', '<', Carbon::today());
+                            });
+                    });
+            })
+            ->get();
+
         $judulLaporan = match ($jenis) {
             '1' => 'Laporan Data Staf Medis & Status SIP',
             '2' => 'Laporan Monitoring Masa Berlaku SIP (Audit Akreditasi KPS)',
@@ -136,6 +167,7 @@ class LaporanController extends Controller
         $pdf = Pdf::loadView('laporan.pdf_template', compact(
             'jenis',
             'data',
+            'stafNonAktifPelayanan',
             'judulLaporan',
             'rsNama',
             'rsAlamat',

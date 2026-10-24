@@ -121,10 +121,21 @@ class VerifikasiSipController extends Controller
             "Mengesahkan berkas SIP No. {$sip->nomor_sip} dokter {$dokterUser->nama} (Fasyankes & Masa Berlaku valid)."
         );
 
-        // 2. PEMICU ALUR REKREDENSIALING (Re-credentialing Workflow Trigger)
+        // 2. PEMICU ALUR REKREDENSIALING / PEMULIHAN HAK PRAKTIK
         // Mengecek status instrumen SPK & RKK dokter (siklus 3 tahun atau permohonan baru)
         $evaluasi = $dokter->evaluasiStatusRekredensial((bool) $sip->permohonan_kewenangan_baru);
         $rekredensialId = null;
+
+        // Jika dokter sebelumnya ditangguhkan (auto-suspend) namun instrumen SPK masih valid (tidak perlu rekredensial baru),
+        // pengesahan fisik SIP definitif oleh Komite Medik (Tahap 3) memajukan berkas ke alur Pengesahan Direksi (Tahap 4)
+        if ($dokter->isSuspended() && ! $evaluasi['perlu']) {
+            $dokter->update(['status_praktik' => 'MENUNGGU_PENGESAHAN']);
+            AuditLog::record(
+                'VERIFIKASI_SIP_PEMULIHAN',
+                'Komite Medik',
+                "Verifikasi SIP Definitif (Tahap 3): Berkas fisik SIP definitif No. {$sip->nomor_sip} dokter {$dokterUser->nama} telah disahkan oleh Komite Medik. Berkas diteruskan ke Direktur & Bagian SDM untuk penerbitan SK Pemulihan Hak Praktik (Tahap 4)."
+            );
+        }
 
         if ($evaluasi['perlu']) {
             // Cek apakah sudah ada rekredensial aktif berstatus proses_rekredensial

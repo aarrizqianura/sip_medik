@@ -36,6 +36,8 @@ class DokumenSip extends Model
         'checklist_masa_berlaku',
         'checklist_keterbacaan_pindaian',
         'is_sip_locked',
+        'is_overdue_locked',
+        'overdue_locked_at',
         'arsip_locked_at',
         'tingkat_eskalasi',
         'terakhir_notifikasi_dokter_at',
@@ -65,12 +67,14 @@ class DokumenSip extends Model
         'tanggal_akhir_dispensasi' => 'date',
         'verified_at' => 'datetime',
         'arsip_locked_at' => 'datetime',
+        'overdue_locked_at' => 'datetime',
         'terakhir_notifikasi_dokter_at' => 'datetime',
         'terakhir_eskalasi_sdm_at' => 'datetime',
         'dispensasi_verified_at' => 'datetime',
         'tempat_praktik_ke' => 'integer',
         'durasi_dispensasi_hari' => 'integer',
         'is_sip_locked' => 'boolean',
+        'is_overdue_locked' => 'boolean',
         'status_kecukupan_skp' => 'boolean',
         'permohonan_kewenangan_baru' => 'boolean',
         'checklist_keabsahan_fasyankes' => 'boolean',
@@ -172,6 +176,7 @@ class DokumenSip extends Model
         if ($this->isGracePeriodAktif()) {
             $this->status = 'dalam_proses';
             $this->tingkat_eskalasi = 'grace_period';
+            $this->is_overdue_locked = false;
             $this->save();
 
             return $this->status;
@@ -184,10 +189,28 @@ class DokumenSip extends Model
 
         $selisih = $this->hitungSisaHari();
 
-        if ($selisih < 0) {
+        // Tahap 7 Kunci Status Kedaluwarsa: Jika sisa_hari <= 0 dan dokter tidak memiliki status dispensasi aktif,
+        // sistem otomatis mengunci status SIP menjadi overdue (Merah) dan memicu auto-suspend wewenang klinis.
+        if ($selisih <= 0) {
             $this->status = 'overdue';
             $this->tingkat_eskalasi = 'kedaluwarsa';
-        } elseif ($selisih <= 7) {
+            $this->is_overdue_locked = true;
+            if (! $this->overdue_locked_at) {
+                $this->overdue_locked_at = Carbon::now();
+            }
+            $this->save();
+
+            // Pemicu otomatis penangguhan wewenang klinis (Auto-Suspend SPK/RKK & Dokter)
+            $this->dokter?->autoSuspendWewenangKlinis($this);
+
+            return $this->status;
+        }
+
+        // Reset kunci overdue jika tanggal diperpanjang/valid
+        $this->is_overdue_locked = false;
+        $this->overdue_locked_at = null;
+
+        if ($selisih <= 7) {
             $this->status = 'critical';
             $this->tingkat_eskalasi = 'eskalasi_kritis';
         } elseif ($selisih <= 30) {
@@ -206,6 +229,11 @@ class DokumenSip extends Model
         return $this->status;
     }
 
+    public function isOverdue(): bool
+    {
+        return $this->status === 'overdue' || ($this->hitungSisaHari() <= 0 && ! $this->isGracePeriodAktif());
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -214,7 +242,7 @@ class DokumenSip extends Model
             'due_soon' => 'Due Soon (H-90 s.d H-60)',
             'due' => 'Peringatan Mendesak (H-30)',
             'critical' => 'Eskalasi Kritis (H-7)',
-            'overdue' => 'Kadaluarsa / Overdue',
+            'overdue' => 'Kedaluwarsa / Overdue (Terkunci)',
             default => ucfirst(str_replace('_', ' ', $this->status)),
         };
     }
@@ -227,8 +255,21 @@ class DokumenSip extends Model
             'due_soon' => 'bg-amber-100 text-amber-800 border-amber-300',
             'due' => 'bg-orange-100 text-orange-800 border-orange-300',
             'critical' => 'bg-orange-200 text-orange-950 border-orange-500 font-bold',
-            'overdue' => 'bg-rose-100 text-rose-800 border-rose-300',
+            'overdue' => 'bg-rose-600 text-white border-rose-700 font-bold shadow-xs',
             default => 'bg-slate-100 text-slate-800 border-slate-300',
+        };
+    }
+
+    public function getStatusBadgeAttribute(): string
+    {
+        return match ($this->status) {
+            'dalam_proses' => '<span class="badge bg-teal text-white border border-teal shadow-2xs"><i class="fa-solid fa-shield-check me-1"></i> Grace Period Aktif</span>',
+            'aktif' => '<span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i> Aktif</span>',
+            'due_soon' => '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-clock me-1"></i> Due Soon</span>',
+            'due' => '<span class="badge bg-orange-subtle text-orange-emphasis border border-orange"><i class="fa-solid fa-triangle-exclamation me-1"></i> Peringatan Mendesak</span>',
+            'critical' => '<span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-bell me-1"></i> Eskalasi Kritis</span>',
+            'overdue' => '<span class="badge bg-danger text-white border border-danger shadow-xs"><i class="fa-solid fa-lock me-1"></i> Overdue (Terkunci)</span>',
+            default => '<span class="badge bg-secondary-subtle text-secondary border border-secondary">'.ucfirst($this->status).'</span>',
         };
     }
 

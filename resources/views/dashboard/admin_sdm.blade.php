@@ -17,10 +17,33 @@
             <i class="fa-solid fa-file-pdf"></i>
             <span>Cetak 5 Jenis Laporan</span>
         </a>
-    </div>
 </div>
 
-<!-- 4 Key Metrics Cards -->
+@if(isset($dokterDitangguhkanList) && $dokterDitangguhkanList->isNotEmpty())
+    <div class="alert alert-danger border-start border-4 border-danger shadow-xs p-3 mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger text-white"><i class="fa-solid fa-triangle-exclamation me-1"></i> ESKALASI DARURAT BAGIAN SDM</span>
+                <h6 class="fw-bold text-danger mb-0">Mitigasi Otomatis (Tahap 7): {{ $dokterDitangguhkanList->count() }} Dokter Masuk Staf Medis Non-Aktif Pelayanan</h6>
+            </div>
+            <a href="{{ route('sdm.laporan.index', ['jenis' => '2', 'status' => 'overdue']) }}" class="btn btn-danger btn-sm fs-xs">
+                <i class="fa-solid fa-file-shield me-1"></i> Buka Monitoring Pokja KPS
+            </a>
+        </div>
+        <p class="fs-sm text-dark mb-2">
+            Sistem mendeteksi bahwa masa berlaku SIP dokter berikut telah kedaluwarsa tanpa dispensasi aktif. Status instrumen <strong>SPK dan RKK beralih menjadi DITANGGUHKAN</strong> dan dokter <strong>terblokir secara administratif dari wewenang tindakan klinis mandiri</strong>. Nama dokter otomatis masuk ke daftar <em>Staf Medis Non-Aktif Pelayanan</em> pada Laporan Akreditasi Pokja KPS guna mencegah temuan audit eksternal serta melindungi fasyankes dari tuntutan malpraktik.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+            @foreach($dokterDitangguhkanList as $dokTangguh)
+                <span class="badge bg-white text-danger border border-danger-subtle p-2 fs-xs d-inline-flex align-items-center gap-2">
+                    <i class="fa-solid fa-user-xmark"></i>
+                    <strong>{{ $dokTangguh->user->nama ?? '-' }}</strong> ({{ $dokTangguh->ksm->nama_ksm ?? '-' }}) &bull; Exp: {{ $dokTangguh->sipTerbaru?->tanggal_kadaluarsa ? $dokTangguh->sipTerbaru->tanggal_kadaluarsa->format('d/m/Y') : '-' }} &bull; <em>Wewenang Mandiri Terblokir</em>
+                </span>
+            @endforeach
+        </div>
+    </div>
+@endif
+
 <!-- 5 Key Metrics Cards (Tahap 5: Early Warning Engine Tiers) -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl">

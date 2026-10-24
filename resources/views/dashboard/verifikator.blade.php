@@ -17,8 +17,32 @@
             <i class="fa-solid fa-plus"></i>
             <span>Tambah SPK/RKK Baru</span>
         </a>
-    </div>
 </div>
+
+@if(isset($dokterDitangguhkanList) && $dokterDitangguhkanList->isNotEmpty())
+    <div class="alert alert-danger border-start border-4 border-danger shadow-xs p-3 mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger text-white"><i class="fa-solid fa-triangle-exclamation me-1"></i> PERINGATAN DARURAT KETUA KOMITE MEDIK</span>
+                <h6 class="fw-bold text-danger mb-0">Mitigasi Otomatis: {{ $dokterDitangguhkanList->count() }} Dokter Berstatus Overdue & SPK/RKK Ditangguhkan</h6>
+            </div>
+            <a href="{{ route('komite.kredensial.index', ['status_kredensial' => 'ditangguhkan']) }}" class="btn btn-danger btn-sm fs-xs">
+                <i class="fa-solid fa-ban me-1"></i> Buka Instrumen SPK Ditangguhkan
+            </a>
+        </div>
+        <p class="fs-sm text-dark mb-2">
+            Masa berlaku SIP dokter berikut telah kedaluwarsa (&le; 0 hari) tanpa dispensasi aktif. Sesuai regulasi Subkomite Kredensial & standar Pokja KPS, <strong>seluruh wewenang klinis (SPK & RKK) telah OTOMATIS DITANGGUHKAN</strong> dan dokter terblokir secara administratif dari wewenang tindakan klinis mandiri sampai diunggah dan disahkannya fisik SIP definitif baru.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-2">
+            @foreach($dokterDitangguhkanList as $dokTangguh)
+                <span class="badge bg-white text-danger border border-danger-subtle p-2 fs-xs d-inline-flex align-items-center gap-2">
+                    <i class="fa-solid fa-user-slash"></i>
+                    <strong>{{ $dokTangguh->user->nama ?? '-' }}</strong> ({{ $dokTangguh->ksm->nama_ksm ?? '-' }}) &bull; SIP No: {{ $dokTangguh->sipTerbaru?->nomor_sip ?? '-' }} &bull; <em>Wewenang Mandiri Terblokir</em>
+                </span>
+            @endforeach
+        </div>
+    </div>
+@endif
 
 @if(($stats['kredensialProsesRekredensial'] ?? 0) > 0)
     <div class="alert alert-warning border-warning shadow-xs d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">

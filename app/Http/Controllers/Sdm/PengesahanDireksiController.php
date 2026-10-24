@@ -145,6 +145,8 @@ class PengesahanDireksiController extends Controller
                 $fileSkPath = $file->storeAs('sk_direktur', $filename, 'public');
             }
 
+            $sebelumnyaDitangguhkan = $dokter->isSuspended() || $kredensial->is_suspended || $dokter->status_praktik === 'DITANGGUHKAN';
+
             // 2. Perbarui Instrumen Kredensial Klinis (SPK & RKK Masa 3 Tahun)
             $kredensial->nomor_spk = $validated['nomor_sk_direktur'];
             $kredensial->nomor_sk_direktur = $validated['nomor_sk_direktur'];
@@ -152,6 +154,9 @@ class PengesahanDireksiController extends Controller
             $kredensial->tanggal_terbit_spk = $validated['tanggal_sk_direktur'];
             $kredensial->tanggal_berakhir_spk = $validated['tanggal_berakhir_spk'];
             $kredensial->status_kredensial = 'aktif';
+            $kredensial->is_suspended = false;
+            $kredensial->suspended_at = null;
+            $kredensial->alasan_penangguhan = null;
             $kredensial->tahap_rekredensial = 'spk_diterbitkan';
             $kredensial->status_rekomendasi = 'disahkan_direktur';
             $kredensial->tanggal_sah_spk = Carbon::today();
@@ -166,24 +171,24 @@ class PengesahanDireksiController extends Controller
             $kredensial->disahkan_oleh_sdm = auth()->id();
             $kredensial->save();
 
-            // 3. Kunci Berkas STR & Repositori e-Arsip Kepegawaian, Perbarui Status Profil menjadi AKTIF_LEGAL
-            $dokter->status_praktik = 'AKTIF_LEGAL';
-            $dokter->is_arsip_locked = true;
-            $dokter->is_str_locked = true;
+            // 3. Kunci Berkas STR & Repositori e-Arsip Kepegawaian, Perbarui Status Profil menjadi AKTIF_LEGAL & Pulihkan Hak Praktik
+            $dokter->pulihkanWewenangKlinis(
+                $validated['nomor_sk_direktur'],
+                $validated['catatan_pengesahan_direksi'] ?? 'Telah disahkan oleh Direktur RSUD dr. H. Moch. Ansari Saleh dan diarsipkan secara digital oleh Bagian SDM.'
+            );
             $dokter->arsip_locked_at = Carbon::now();
             $dokter->arsip_locked_by = auth()->id();
-            $dokter->nomor_sk_direktur = $validated['nomor_sk_direktur'];
             $dokter->tanggal_sk_direktur = $validated['tanggal_sk_direktur'];
             if ($fileSkPath) {
                 $dokter->file_sk_direktur = $fileSkPath;
             }
-            $dokter->catatan_pengesahan_direksi = $validated['catatan_pengesahan_direksi']
-                ?? 'Telah disahkan oleh Direktur RSUD dr. H. Moch. Ansari Saleh dan diarsipkan secara digital oleh Bagian SDM.';
             $dokter->save();
 
             // 4. Kunci Berkas SIP dan Daftarkan Tanggal Jatuh Tempo SIP ke Mesin Pelacakan Otomatis
             if ($sip) {
                 $sip->is_sip_locked = true;
+                $sip->is_overdue_locked = false;
+                $sip->overdue_locked_at = null;
                 $sip->arsip_locked_at = Carbon::now();
                 $sip->status_verifikasi = 'disetujui';
                 $sip->updateStatusKadaluarsa();
@@ -191,6 +196,14 @@ class PengesahanDireksiController extends Controller
             }
 
             // 5. Rekam Jejak Audit Sistem (Audit Log)
+            if ($sebelumnyaDitangguhkan) {
+                AuditLog::record(
+                    'PEMULIHAN_HAK_PRAKTIK',
+                    'SDM & Direksi',
+                    "Pemulihan Hak Praktik (Tahap 7): Penangguhan wewenang klinis dicabut. Dokter {$dokter->user->nama} resmi dipulihkan hak praktiknya menjadi AKTIF_LEGAL setelah pengesahan SIP definitif & SK Direktur No. {$validated['nomor_sk_direktur']}."
+                );
+            }
+
             AuditLog::record(
                 'PENGESAHAN_SK_DIREKTUR',
                 'SDM & Direksi',

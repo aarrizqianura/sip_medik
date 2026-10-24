@@ -95,7 +95,16 @@
         .status-aktif { background-color: #dcfce7; color: #166534; }
         .status-due_soon { background-color: #fef9c3; color: #854d0e; }
         .status-due { background-color: #ffedd5; color: #9a3412; }
-        .status-overdue { background-color: #ffe4e6; color: #9f1239; }
+        .status-overdue { background-color: #e11d48; color: #ffffff; }
+        .status-ditangguhkan { background-color: #b91c1c; color: #ffffff; }
+        .box-warning-kps {
+            background-color: #fff1f2;
+            border: 1px solid #fecdd3;
+            border-left: 4px solid #e11d48;
+            padding: 8px 10px;
+            margin-bottom: 14px;
+            font-size: 8pt;
+        }
 
         .signature-section {
             width: 100%;
@@ -176,6 +185,45 @@
         </table>
 
     @elseif($jenis == '2')
+        {{-- TAHAP 7: LAMPIRAN POKJA KPS - STAF MEDIS NON-AKTIF PELAYANAN --}}
+        @if(isset($stafNonAktifPelayanan) && $stafNonAktifPelayanan->isNotEmpty())
+            <div class="box-warning-kps">
+                <strong>LAMPIRAN KHUSUS POKJA KPS: DAFTAR STAF MEDIS NON-AKTIF PELAYANAN (AUTO-SUSPEND & OVERDUE)</strong><br>
+                Sesuai standar akreditasi KARS Pokja KPS, dokter yang tercantum di bawah ini telah dikunci statusnya menjadi Overdue dan instrumen SPK & RKK otomatis DITANGGUHKAN oleh sistem. Seluruh tindakan klinis mandiri terblokir secara administratif untuk memitigasi tuntutan malpraktik dan temuan audit eksternal.
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr style="background-color: #fee2e2;">
+                        <th width="25">No</th>
+                        <th>Nama Dokter</th>
+                        <th>KSM / Spesialisasi</th>
+                        <th>Nomor SIP & Tgl Kadaluarsa</th>
+                        <th>Kunci Status SIP</th>
+                        <th>Status SPK & RKK</th>
+                        <th>Wewenang Klinis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($stafNonAktifPelayanan as $i => $dok)
+                        @php
+                            $sipOver = $dok->sipTerbaru;
+                            $spkOver = $dok->kredensialTerbaru ?: $dok->spkTerbaru;
+                        @endphp
+                        <tr>
+                            <td class="text-center">{{ $i + 1 }}</td>
+                            <td class="font-bold">{{ $dok->user->nama ?? '-' }}</td>
+                            <td>{{ $dok->ksm->nama_ksm ?? '-' }} - {{ $dok->spesialisasi }}</td>
+                            <td>{{ $sipOver->nomor_sip ?? '-' }} (Exp: {{ $sipOver && $sipOver->tanggal_kadaluarsa ? $sipOver->tanggal_kadaluarsa->format('d/m/Y') : '-' }})</td>
+                            <td class="text-center"><span class="badge-status status-overdue">OVERDUE (TERKUNCI)</span></td>
+                            <td class="text-center"><span class="badge-status status-ditangguhkan">DITANGGUHKAN</span></td>
+                            <td class="text-center" style="color: #b91c1c; font-weight: bold;">Terblokir Mandiri (Non-Aktif Pelayanan)</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            <div style="margin-bottom: 12px; font-weight: bold; font-size: 9pt;">Rekapitulasi Seluruh Dokumen SIP Aktif & Pemantauan:</div>
+        @endif
+
         <table class="data-table">
             <thead>
                 <tr>
@@ -185,27 +233,50 @@
                     <th>Nomor SIP</th>
                     <th>Tgl Kedaluwarsa</th>
                     <th>Sisa Hari</th>
-                    <th>Status Legalitas</th>
-                    <th>Histori SPK Direktur</th>
+                    <th>Status SIP</th>
+                    <th>Status SPK & RKK</th>
+                    <th>Wewenang Pelayanan</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($data as $idx => $s)
-                    @php $selisih = $s->hitungSisaHari(); @endphp
-                    <tr>
+                    @php
+                        $selisih = $s->hitungSisaHari();
+                        $dokterObj = $s->dokter;
+                        $spk = $dokterObj?->spkTerbaru ?: $dokterObj?->kredensialTerbaru;
+                        $isSuspended = $dokterObj?->isSuspended();
+                    @endphp
+                    <tr style="{{ $isSuspended ? 'background-color: #fff1f2;' : '' }}">
                         <td class="text-center">{{ $idx + 1 }}</td>
                         <td class="font-bold">{{ $s->dokter->user->nama ?? '-' }}</td>
                         <td>{{ $s->dokter->ksm->nama_ksm ?? '-' }}</td>
                         <td>{{ $s->nomor_sip }}</td>
                         <td class="text-center">{{ $s->tanggal_kadaluarsa ? $s->tanggal_kadaluarsa->format('d/m/Y') : '-' }}</td>
-                        <td class="text-center">{{ $selisih < 0 ? 'Kadaluarsa (' . abs($selisih) . ' hr)' : $selisih . ' hari' }}</td>
+                        <td class="text-center">{{ $selisih <= 0 ? 'Kadaluarsa (' . abs($selisih) . ' hr)' : $selisih . ' hari' }}</td>
                         <td class="text-center">
                             <span class="badge-status status-{{ $s->status }}">{{ strtoupper($s->status) }}</span>
                         </td>
-                        <td>{{ $s->dokter->spkTerbaru ? $s->dokter->spkTerbaru->nomor_spk : 'Belum Terbit' }}</td>
+                        <td class="text-center">
+                            @if($isSuspended || $spk?->isSuspended())
+                                <span class="badge-status status-ditangguhkan">DITANGGUHKAN</span>
+                            @elseif($spk)
+                                <span>{{ $spk->nomor_spk }} (Aktif)</span>
+                            @else
+                                <span>Belum Terbit</span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if($isSuspended)
+                                <span style="color: #b91c1c; font-weight: bold;">Terblokir Mandiri</span>
+                            @elseif($dokterObj?->hasActiveDispensasi())
+                                <span style="color: #0f766e; font-weight: bold;">Grace Period</span>
+                            @else
+                                <span style="color: #166534; font-weight: bold;">Aktif Sah</span>
+                            @endif
+                        </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="text-center">Tidak ada data.</td></tr>
+                    <tr><td colspan="9" class="text-center">Tidak ada data.</td></tr>
                 @endforelse
             </tbody>
         </table>

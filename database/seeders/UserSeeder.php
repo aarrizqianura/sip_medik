@@ -271,6 +271,9 @@ class UserSeeder extends Seeder
                 'verified_str_at' => Carbon::now()->subMonths(2),
                 'catatan_verifikasi_str' => 'Tervalidasi sesuai pangkalan data SatuSehat SDMK KKI.',
                 'satusehat_verified_at' => Carbon::now()->subMonths(2),
+                'status_praktik' => 'DITANGGUHKAN',
+                'suspended_at' => Carbon::now()->subDays(10),
+                'alasan_penangguhan' => 'SIP No. 446/102-SIP.SP/DPMPTSP/2021 kedaluwarsa. Wewenang tindakan klinis mandiri ditangguhkan otomatis untuk kepatuhan Pokja KPS & perlindungan hukum.',
             ]
         );
         DokumenSip::updateOrCreate(
@@ -282,6 +285,8 @@ class UserSeeder extends Seeder
                 'tanggal_kadaluarsa' => Carbon::now()->subDays(10)->toDateString(), // Overdue
                 'status' => 'overdue',
                 'status_verifikasi' => 'disetujui',
+                'is_overdue_locked' => true,
+                'overdue_locked_at' => Carbon::now()->subDays(10),
                 'file_sip' => 'sip/sip_sample_4.pdf',
                 'catatan_verifikasi' => 'Telah kedaluwarsa. Telah dikirimkan instruksi penundaan tindakan.',
                 'verified_by' => $verifikator->id,
@@ -294,7 +299,10 @@ class UserSeeder extends Seeder
                 'id_dokter' => $dokter4->id,
                 'tanggal_terbit_spk' => Carbon::now()->subYears(3)->toDateString(),
                 'tanggal_berakhir_spk' => Carbon::now()->subDays(5)->toDateString(),
-                'status_kredensial' => 'kedaluwarsa',
+                'status_kredensial' => 'ditangguhkan',
+                'is_suspended' => true,
+                'suspended_at' => Carbon::now()->subDays(10),
+                'alasan_penangguhan' => 'Penangguhan otomatis instrumen SPK & RKK akibat SIP kedaluwarsa.',
                 'file_rkk' => 'rkk/rkk_obgyn_ratna.pdf',
             ]
         );
