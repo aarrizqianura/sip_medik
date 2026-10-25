@@ -92,8 +92,8 @@ class DashboardController extends Controller
         $auditTerbaru = AuditLog::with('user')->latest()->take(8)->get();
         $notifikasiTerbaru = Notifikasi::with('user')->latest()->take(8)->get();
 
-        // Rekap KSM
-        $ksmStatistik = Ksm::withCount('dokters')->get();
+        // Rekap KSM & Kepatuhan Legalitas
+        $ksmStatistik = Ksm::with(['dokters.sipTerbaru', 'dokters.spkTerbaru'])->withCount('dokters')->get();
 
         if ($user->role === 'super_admin') {
             $totalUser = User::count();

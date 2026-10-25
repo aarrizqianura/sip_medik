@@ -270,7 +270,7 @@ class EarlyWarningTahap5Test extends TestCase
                 'id_dokter' => $this->dokter->id,
                 'tempat_praktik_ke' => 1,
                 'tanggal_terbit' => Carbon::now()->subYears(2)->toDateString(),
-                'tanggal_kadaluarsa' => Carbon::now()->addDays(5)->toDateString(),
+                'tanggal_kadaluarsa' => Carbon::now()->addDays(1)->toDateString(),
                 'status' => 'critical',
                 'status_verifikasi' => 'disetujui',
                 'file_sip' => 'sip/sip_sample_1.pdf',

@@ -33,6 +33,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Repositori berkas SIP publik/terverifikasi
     Route::get('/sip/arsip/{id}', [PengajuanSipController::class, 'show'])->name('sip.show');
+    Route::get('/sip/preview/{id}', [PengajuanSipController::class, 'previewFile'])->name('sip.preview_file');
 
     // 1. Role Super Admin
     Route::middleware(['role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -97,6 +98,7 @@ Route::middleware(['auth'])->group(function () {
     // 4. Role Dokter (dan Super Admin)
     Route::middleware(['role:dokter,super_admin'])->prefix('dokter')->name('dokter.')->group(function () {
         Route::get('pengajuan-sip', [PengajuanSipController::class, 'index'])->name('pengajuan.index');
+        Route::get('riwayat-dokumen', [PengajuanSipController::class, 'riwayatDokumen'])->name('riwayat');
         Route::get('pengajuan-sip/tambah', [PengajuanSipController::class, 'create'])->name('pengajuan.create');
         Route::post('pengajuan-sip', [PengajuanSipController::class, 'store'])->name('pengajuan.store');
         Route::get('pengajuan-sip/{id}/dispensasi', [PengajuanSipController::class, 'createDispensasi'])->name('dispensasi.create');

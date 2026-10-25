@@ -1,7 +1,7 @@
 @php
     $user = auth()->user();
     $role = $user->role ?? 'guest';
-    $currentRoute = Route::currentRouteName();
+    $currentRoute = Route::currentRouteName() ?? '';
 @endphp
 
 <aside class="sidebar-wrapper bg-dark-teal text-white shadow-lg d-flex flex-column" id="sidebar">
@@ -126,19 +126,19 @@
                 </li>
             @endif
 
-            {{-- 4. DOKTER MENU --}}
+            {{-- 4. DOKTER MENU (Minimalis & Berorientasi Aksi) --}}
             @if(in_array($role, ['dokter', 'super_admin']))
                 <li class="nav-header text-uppercase text-teal-300 fs-xs fw-bold px-3 pt-3 pb-1">Portal Dokter</li>
                 <li class="nav-item">
-                    <a href="{{ route('dokter.pengajuan.index') }}" class="nav-link {{ str_starts_with($currentRoute, 'dokter.pengajuan') ? 'active' : '' }}">
-                        <i class="fa-solid fa-file-arrow-up me-2"></i>
-                        <span>Unggah & Riwayat SIP</span>
+                    <a href="{{ route('dokter.pengajuan.create') }}" class="nav-link {{ str_starts_with($currentRoute, 'dokter.pengajuan') ? 'active' : '' }}">
+                        <i class="fa-solid fa-file-circle-plus me-2"></i>
+                        <span>Pengajuan Perpanjangan SIP</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('dokter.arsip.saya') }}" class="nav-link {{ $currentRoute == 'dokter.arsip.saya' ? 'active' : '' }}">
-                        <i class="fa-solid fa-box-archive me-2"></i>
-                        <span>e-Arsip & Hak Praktik</span>
+                    <a href="{{ route('dokter.riwayat') }}" class="nav-link {{ $currentRoute === 'dokter.riwayat' ? 'active' : '' }}">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i>
+                        <span>Riwayat & Berkas SIP</span>
                     </a>
                 </li>
             @endif

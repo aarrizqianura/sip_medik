@@ -240,6 +240,82 @@
             border-color: #fecdd3;
         }
 
+        /* Micro Typography & Badges */
+        .fs-2xs {
+            font-size: 0.7rem !important;
+        }
+
+        .fs-3xs {
+            font-size: 0.65rem !important;
+        }
+
+        .btn-2xs {
+            padding: 0.2rem 0.5rem !important;
+            font-size: 0.725rem !important;
+            line-height: 1.25 !important;
+            border-radius: 0.375rem !important;
+        }
+
+        .btn-xs {
+            padding: 0.25rem 0.6rem !important;
+            font-size: 0.8rem !important;
+            line-height: 1.3 !important;
+            border-radius: 0.375rem !important;
+        }
+
+        /* Shadow Utilities */
+        .shadow-xs {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .shadow-2xs {
+            box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.03) !important;
+        }
+
+        .hover-shadow {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hover-shadow:hover {
+            box-shadow: 0 4px 14px rgba(15, 118, 110, 0.12) !important;
+            transform: translateY(-2px);
+        }
+
+        .transition-all {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Accent Colors */
+        .bg-teal-accent {
+            background-color: #5eead4 !important;
+            color: #042f2e !important;
+        }
+
+        .border-teal-light {
+            border-color: rgba(20, 184, 166, 0.2) !important;
+        }
+
+        .border-teal {
+            border-color: var(--primary-teal) !important;
+        }
+
+        .bg-dark-teal-hover:hover {
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .bg-emerald {
+            background-color: #10b981 !important;
+            color: #ffffff !important;
+        }
+
+        .border-emerald {
+            border-color: #10b981 !important;
+        }
+
+        .text-emerald {
+            color: #059669 !important;
+        }
+
         /* Countdown display */
         .countdown-badge {
             font-size: 0.85rem;
@@ -263,6 +339,18 @@
         .countdown-badge.bg-safe {
             background-color: #10b981 !important;
             color: #ffffff !important;
+        }
+
+        /* Table & Layout Polish */
+        .table-compact th, .table-compact td {
+            padding: 0.55rem 0.75rem;
+        }
+
+        .stat-card-title {
+            letter-spacing: 0.04em;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
         }
     </style>
     @stack('styles')

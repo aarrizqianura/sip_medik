@@ -1,154 +1,211 @@
 @extends('layouts.app')
 
-@section('title', 'Laporan & Audit Akreditasi KPS')
+@section('title', 'Pusat Laporan & Audit Akreditasi KPS')
 
 @section('content')
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+<!-- Header Halaman -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-3">
     <div>
-        <h4 class="fw-bold text-dark mb-1">Pusat Laporan & Audit Akreditasi KPS</h4>
-        <p class="text-secondary fs-sm mb-0">Cetak dan ekspor 5 format laporan kepatuhan SIP & kredensial dokter ke PDF dan Excel resmi</p>
+        <h4 class="fw-bold text-dark mb-0">Pusat Laporan & Audit Akreditasi KPS</h4>
+        <p class="text-secondary fs-sm mb-0">Tata kelola audit kepatuhan legalitas SIP & wewenang klinis dokter RSUD dr. H. Moch. Ansari Saleh</p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{{ route('sdm.laporan.pdf', request()->query()) }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2" target="_blank">
-            <i class="fa-solid fa-file-pdf"></i>
-            <span>Ekspor PDF Resmi</span>
-        </a>
-        <a href="{{ route('sdm.laporan.excel', request()->query()) }}" class="btn btn-outline-success btn-sm d-flex align-items-center gap-2">
-            <i class="fa-solid fa-file-excel"></i>
-            <span>Ekspor Excel (.xls)</span>
-        </a>
-    </div>
+    <span class="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1 fs-xs fw-semibold">
+        <i class="fa-solid fa-stamp me-1"></i> Standar Baku 10 Data / Halaman
+    </span>
 </div>
 
-<!-- Tabs 5 Jenis Laporan -->
-<div class="card shadow-xs mb-4">
-    <div class="card-header bg-white border-bottom p-2">
-        <ul class="nav nav-pills flex-column flex-md-row gap-1">
-            <li class="nav-item">
-                <a class="nav-link fs-xs fw-semibold py-2 px-3 {{ $jenis == '1' ? 'active bg-teal' : 'text-dark' }}" href="{{ route('sdm.laporan.index', ['jenis' => '1']) }}">
-                    1. Data Dokter & SIP
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fs-xs fw-semibold py-2 px-3 {{ $jenis == '2' ? 'active bg-teal' : 'text-dark' }}" href="{{ route('sdm.laporan.index', ['jenis' => '2']) }}">
-                    2. Monitoring Masa Berlaku (Audit KPS)
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fs-xs fw-semibold py-2 px-3 {{ $jenis == '3' ? 'active bg-teal' : 'text-dark' }}" href="{{ route('sdm.laporan.index', ['jenis' => '3']) }}">
-                    3. Verifikasi Komite Medik
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fs-xs fw-semibold py-2 px-3 {{ $jenis == '4' ? 'active bg-teal' : 'text-dark' }}" href="{{ route('sdm.laporan.index', ['jenis' => '4']) }}">
-                    4. Masa Berlaku SPK & RKK
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link fs-xs fw-semibold py-2 px-3 {{ $jenis == '5' ? 'active bg-teal' : 'text-dark' }}" href="{{ route('sdm.laporan.index', ['jenis' => '5']) }}">
-                    5. Log Notifikasi Pengingat
-                </a>
-            </li>
-        </ul>
-    </div>
+<!-- Bilah Pengendali Terpadu (Unified Toolbar) -->
+<div class="card shadow-xs mb-3 border">
+    <div class="card-body p-2 bg-light">
+        <form method="GET" action="{{ route('sdm.laporan.index') }}" class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <!-- Navigasi 5 Format Laporan (Segmented Toolbar) -->
+            <div class="d-flex align-items-center flex-wrap gap-1">
+                <span class="fs-xs fw-bold text-secondary text-uppercase me-1"><i class="fa-solid fa-file-invoice me-1"></i> Format:</span>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Format Laporan">
+                    <a href="{{ route('sdm.laporan.index', ['jenis' => '1']) }}" class="btn {{ $jenis == '1' ? 'btn-teal text-white fw-bold' : 'btn-white border text-dark' }}" title="1. Data Dokter & SIP">
+                        1. Dokter & SIP
+                    </a>
+                    <a href="{{ route('sdm.laporan.index', ['jenis' => '2']) }}" class="btn {{ $jenis == '2' ? 'btn-teal text-white fw-bold' : 'btn-white border text-dark' }}" title="2. Monitoring Masa Berlaku (Audit KPS)">
+                        2. Audit KPS
+                    </a>
+                    <a href="{{ route('sdm.laporan.index', ['jenis' => '3']) }}" class="btn {{ $jenis == '3' ? 'btn-teal text-white fw-bold' : 'btn-white border text-dark' }}" title="3. Verifikasi Komite Medik">
+                        3. Komite Medik
+                    </a>
+                    <a href="{{ route('sdm.laporan.index', ['jenis' => '4']) }}" class="btn {{ $jenis == '4' ? 'btn-teal text-white fw-bold' : 'btn-white border text-dark' }}" title="4. Masa Berlaku SPK & RKK">
+                        4. SPK & RKK
+                    </a>
+                    <a href="{{ route('sdm.laporan.index', ['jenis' => '5']) }}" class="btn {{ $jenis == '5' ? 'btn-teal text-white fw-bold' : 'btn-white border text-dark' }}" title="5. Log Notifikasi Pengingat">
+                        5. Log Notifikasi
+                    </a>
+                </div>
+            </div>
 
-    <!-- Filter Form -->
-    <div class="card-body p-3 bg-light border-bottom">
-        <form method="GET" action="{{ route('sdm.laporan.index') }}" class="row g-2 align-items-center">
-            <input type="hidden" name="jenis" value="{{ $jenis }}">
+            <!-- Filter Parameter Kontekstual & Tombol Ekspor Sejajar -->
+            <div class="d-flex align-items-center flex-wrap gap-2 ms-auto">
+                <input type="hidden" name="jenis" value="{{ $jenis }}">
 
-            @if(in_array($jenis, ['1', '2', '3', '4']))
-                <div class="col-md-3">
-                    <select name="id_ksm" class="form-select form-select-sm">
+                @if(in_array($jenis, ['1', '2', '3', '4']))
+                    <select name="id_ksm" class="form-select form-select-sm" style="width: auto; min-width: 140px;">
                         <option value="">-- Semua KSM --</option>
                         @foreach($ksmList as $ksm)
                             <option value="{{ $ksm->id }}" {{ request('id_ksm') == $ksm->id ? 'selected' : '' }}>{{ $ksm->nama_ksm }}</option>
                         @endforeach
                     </select>
-                </div>
-            @endif
+                @endif
 
-            @if($jenis == '1')
-                <div class="col-md-3">
-                    <select name="status_kepegawaian" class="form-select form-select-sm">
-                        <option value="">-- Status Kepegawaian --</option>
+                @if($jenis == '1')
+                    <select name="status_kepegawaian" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">-- Kepegawaian --</option>
                         <option value="PNS" {{ request('status_kepegawaian') == 'PNS' ? 'selected' : '' }}>PNS</option>
                         <option value="PPPK" {{ request('status_kepegawaian') == 'PPPK' ? 'selected' : '' }}>PPPK</option>
                         <option value="BLUD" {{ request('status_kepegawaian') == 'BLUD' ? 'selected' : '' }}>BLUD</option>
                         <option value="Mitra" {{ request('status_kepegawaian') == 'Mitra' ? 'selected' : '' }}>Mitra</option>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <select name="status_sip" class="form-select form-select-sm">
-                        <option value="">-- Status Dokumen SIP --</option>
+                    <select name="status_sip" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">-- Status SIP --</option>
                         <option value="aktif" {{ request('status_sip') == 'aktif' ? 'selected' : '' }}>Aktif</option>
                         <option value="due_soon" {{ request('status_sip') == 'due_soon' ? 'selected' : '' }}>Due Soon</option>
                         <option value="due" {{ request('status_sip') == 'due' ? 'selected' : '' }}>Due (Kritis)</option>
                         <option value="overdue" {{ request('status_sip') == 'overdue' ? 'selected' : '' }}>Overdue</option>
                     </select>
-                </div>
-            @elseif($jenis == '2')
-                <div class="col-md-4">
-                    <select name="status" class="form-select form-select-sm">
-                        <option value="">-- Semua Status Legalitas --</option>
+                @elseif($jenis == '2')
+                    <select name="status" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">-- Status Legalitas --</option>
                         <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif (>90 Hari)</option>
                         <option value="due_soon" {{ request('status') == 'due_soon' ? 'selected' : '' }}>Due Soon (31-90 Hari)</option>
                         <option value="due" {{ request('status') == 'due' ? 'selected' : '' }}>Due / Kritis (≤30 Hari)</option>
                         <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>Overdue / Kedaluwarsa</option>
                     </select>
-                </div>
-            @elseif($jenis == '3')
-                <div class="col-md-3">
-                    <select name="status_verifikasi" class="form-select form-select-sm">
-                        <option value="">-- Status Verifikasi --</option>
+                @elseif($jenis == '3')
+                    <select name="status_verifikasi" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">-- Verifikasi --</option>
                         <option value="disetujui" {{ request('status_verifikasi') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                         <option value="ditolak" {{ request('status_verifikasi') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                         <option value="menunggu" {{ request('status_verifikasi') == 'menunggu' ? 'selected' : '' }}>Menunggu</option>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="tgl_mulai" class="form-control form-control-sm" value="{{ request('tgl_mulai') }}" placeholder="Tgl Mulai">
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="tgl_selesai" class="form-control form-control-sm" value="{{ request('tgl_selesai') }}" placeholder="Tgl Selesai">
-                </div>
-            @elseif($jenis == '4')
-                <div class="col-md-4">
-                    <select name="status_kredensial" class="form-select form-select-sm">
-                        <option value="">-- Status Kredensial --</option>
+                    <input type="date" name="tgl_mulai" class="form-control form-control-sm" style="width: auto;" value="{{ request('tgl_mulai') }}">
+                    <input type="date" name="tgl_selesai" class="form-control form-control-sm" style="width: auto;" value="{{ request('tgl_selesai') }}">
+                @elseif($jenis == '4')
+                    <select name="status_kredensial" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">-- Kredensial --</option>
                         <option value="aktif" {{ request('status_kredensial') == 'aktif' ? 'selected' : '' }}>Aktif</option>
                         <option value="evaluasi" {{ request('status_kredensial') == 'evaluasi' ? 'selected' : '' }}>Evaluasi (≤ 90 Hari)</option>
                         <option value="kedaluwarsa" {{ request('status_kredensial') == 'kedaluwarsa' ? 'selected' : '' }}>Kedaluwarsa</option>
                     </select>
-                </div>
-            @elseif($jenis == '5')
-                <div class="col-md-3">
-                    <select name="status_terkirim" class="form-select form-select-sm">
-                        <option value="">-- Status Pengiriman --</option>
-                        <option value="1" {{ request('status_terkirim') == '1' ? 'selected' : '' }}>Sukses Terkirim</option>
+                @elseif($jenis == '5')
+                    <select name="status_terkirim" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">-- Status Kirim --</option>
+                        <option value="1" {{ request('status_terkirim') == '1' ? 'selected' : '' }}>Sukses</option>
                         <option value="0" {{ request('status_terkirim') == '0' ? 'selected' : '' }}>Gagal</option>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="tgl_mulai" class="form-control form-control-sm" value="{{ request('tgl_mulai') }}">
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="tgl_selesai" class="form-control form-control-sm" value="{{ request('tgl_selesai') }}">
-                </div>
-            @endif
+                    <input type="date" name="tgl_mulai" class="form-control form-control-sm" style="width: auto;" value="{{ request('tgl_mulai') }}">
+                    <input type="date" name="tgl_selesai" class="form-control form-control-sm" style="width: auto;" value="{{ request('tgl_selesai') }}">
+                @endif
 
-            <div class="col d-flex gap-2">
-                <button type="submit" class="btn btn-secondary btn-sm">
-                    <i class="fa-solid fa-filter me-1"></i> Terapkan Filter
+                <button type="submit" class="btn btn-secondary btn-sm" title="Terapkan Filter">
+                    <i class="fa-solid fa-filter me-1"></i> Filter
                 </button>
-                <a href="{{ route('sdm.laporan.index', ['jenis' => $jenis]) }}" class="btn btn-light btn-sm border" title="Reset">
+                <a href="{{ route('sdm.laporan.index', ['jenis' => $jenis]) }}" class="btn btn-light btn-sm border" title="Reset Filter">
                     <i class="fa-solid fa-rotate-left"></i>
+                </a>
+
+                <!-- Pemisah Vertikal -->
+                <div class="vr mx-1 d-none d-sm-block" style="height: 24px;"></div>
+
+                <!-- Tombol Ekspor Resmi -->
+                <a href="{{ route('sdm.laporan.pdf', request()->query()) }}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" target="_blank" title="Ekspor PDF">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <span>PDF</span>
+                </a>
+                <a href="{{ route('sdm.laporan.excel', request()->query()) }}" class="btn btn-outline-success btn-sm d-flex align-items-center gap-1" title="Ekspor Excel">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Excel</span>
                 </a>
             </div>
         </form>
     </div>
+</div>
 
-    <!-- Table Preview Laporan -->
+<!-- Bilah Peringatan Mini Overdue (Collapsible Alert) Khusus Format 2 -->
+@if($jenis == '2')
+    <div class="alert alert-danger border-danger p-2 mb-3 shadow-xs">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger text-white fs-3xs px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> POKJA KPS 9</span>
+                <strong class="text-danger fs-xs mb-0">Daftar Staf Medis Non-Aktif Pelayanan (Overdue & Auto-Suspend)</strong>
+                <span class="badge bg-danger rounded-pill px-2 py-0 fs-3xs">{{ $stafNonAktifPelayanan->count() }} Dokter Ditangguhkan</span>
+            </div>
+            <button class="btn btn-2xs btn-outline-danger d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOverdue" aria-expanded="true" aria-controls="collapseOverdue">
+                <i class="fa-solid fa-chevron-down"></i>
+                <span>Detail Staf Overdue</span>
+            </button>
+        </div>
+        <div class="collapse show mt-2 pt-2 border-top border-danger-subtle" id="collapseOverdue">
+            <p class="fs-3xs text-danger-emphasis mb-2">
+                Berdasarkan tata kelola kredensial rumah sakit dan kepatuhan standar akreditasi <strong>Pokja KPS</strong>, dokter yang masa berlaku SIP-nya telah kedaluwarsa (&le; 0 hari) tanpa dispensasi aktif secara otomatis <strong>dikunci statusnya (Overdue)</strong> dan instrumen <strong>SPK/RKK beralih menjadi DITANGGUHKAN</strong>. Dokter terblokir secara administratif dari wewenang tindakan klinis mandiri guna mencegah temuan audit eksternal serta melindungi fasyankes dari tuntutan malpraktik.
+            </p>
+
+            @if($stafNonAktifPelayanan->isNotEmpty())
+                <div class="table-responsive bg-white rounded border border-danger-subtle mb-1">
+                    <table class="table table-sm table-hover align-middle mb-0 fs-xs">
+                        <thead class="table-danger text-danger-emphasis">
+                            <tr>
+                                <th width="30">#</th>
+                                <th>Nama Dokter & KSM</th>
+                                <th>Nomor SIP & Tgl Kedaluwarsa</th>
+                                <th>Kunci Status SIP</th>
+                                <th>Status SPK & RKK</th>
+                                <th>Wewenang Tindakan Klinis</th>
+                                <th>Mitigasi Hukum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($stafNonAktifPelayanan as $i => $dok)
+                                @php
+                                    $sipOver = $dok->sipTerbaru;
+                                    $spkOver = $dok->kredensialTerbaru ?: $dok->spkTerbaru;
+                                    $sisaOver = $sipOver ? $sipOver->hitungSisaHari() : 0;
+                                @endphp
+                                <tr>
+                                    <td>{{ $i + 1 }}</td>
+                                    <td>
+                                        <span class="fw-bold text-dark">{{ $dok->user->nama ?? '-' }}</span><br>
+                                        <span class="text-muted">{{ $dok->ksm->nama_ksm ?? '-' }} &bull; {{ $dok->spesialisasi }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="font-monospace fw-semibold text-danger">{{ $sipOver->nomor_sip ?? '-' }}</span><br>
+                                        <span class="text-muted">Jatuh Tempo: {{ $sipOver && $sipOver->tanggal_kadaluarsa ? $sipOver->tanggal_kadaluarsa->format('d/m/Y') : '-' }} ({{ abs($sisaOver) }} hari lalu)</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger text-white shadow-2xs"><i class="fa-solid fa-lock me-1"></i> Overdue (Terkunci)</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-ban me-1"></i> DITANGGUHKAN</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger text-white"><i class="fa-solid fa-shield-xmark me-1"></i> Terblokir Administratif</span><br>
+                                        <span class="text-muted fs-2xs">Bebas Pelayanan Tindakan Mandiri</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-dark border"><i class="fa-solid fa-scale-balanced me-1"></i> Terlindungi dr Risiko Malpraktik</span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="alert alert-success py-1 px-2 mb-0 fs-3xs d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    <span>Nihil: Seluruh staf medis yang aktif berpraktek memiliki SIP absah atau masa tenggang legal (Kepatuhan 100% Audit KPS).</span>
+                </div>
+            @endif
+        </div>
+    </div>
+@endif
+
+<!-- Tabel Utama Laporan -->
+<div class="card shadow-xs">
     <div class="table-responsive">
         @if($jenis == '1')
             {{-- LAPORAN 1: DATA STAF MEDIS & STATUS SIP --}}
@@ -170,7 +227,7 @@
                     @forelse($data as $idx => $d)
                         @php $sip = $d->sipTerbaru; @endphp
                         <tr>
-                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ method_exists($data, 'firstItem') && $data->firstItem() ? ($data->firstItem() + $idx) : ($idx + 1) }}</td>
                             <td><span class="font-monospace fs-xs">{{ $d->nip_nrp }}</span></td>
                             <td class="fw-semibold text-dark">{{ $d->user->nama ?? '-' }}</td>
                             <td>{{ $d->ksm->nama_ksm ?? '-' }}</td>
@@ -194,78 +251,6 @@
 
         @elseif($jenis == '2')
             {{-- LAPORAN 2: MONITORING MASA BERLAKU SIP (AUDIT POKJA KPS) --}}
-            
-            {{-- TAHAP 7: DAFTAR STAF MEDIS NON-AKTIF PELAYANAN (POKJA KPS & PERLINDUNGAN MALPRAKTIK) --}}
-            <div class="p-3 mb-3 bg-danger-subtle border-start border-4 border-danger rounded-end">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-danger text-white fs-xs px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i> POKJA KPS STANDAR 9</span>
-                        <h6 class="fw-bold text-danger mb-0">Daftar Staf Medis Non-Aktif Pelayanan (Overdue & Auto-Suspend)</h6>
-                    </div>
-                    <span class="badge bg-danger rounded-pill px-3 py-1">{{ $stafNonAktifPelayanan->count() }} Dokter Ditangguhkan</span>
-                </div>
-                <p class="fs-xs text-danger-emphasis mb-2">
-                    Berdasarkan tata kelola kredensial rumah sakit dan kepatuhan standar akreditasi <strong>Pokja KPS</strong>, dokter yang masa berlaku SIP-nya telah kedaluwarsa (&le; 0 hari) tanpa dispensasi aktif secara otomatis <strong>dikunci statusnya (Overdue)</strong> dan instrumen <strong>SPK/RKK beralih menjadi DITANGGUHKAN</strong>. Dokter terblokir secara administratif dari wewenang tindakan klinis mandiri guna mencegah temuan audit eksternal serta melindungi fasyankes dari tuntutan malpraktik.
-                </p>
-
-                @if($stafNonAktifPelayanan->isNotEmpty())
-                    <div class="table-responsive bg-white rounded border border-danger-subtle mb-1">
-                        <table class="table table-sm table-hover align-middle mb-0 fs-xs">
-                            <thead class="table-danger text-danger-emphasis">
-                                <tr>
-                                    <th width="30">#</th>
-                                    <th>Nama Dokter & KSM</th>
-                                    <th>Nomor SIP & Tgl Kedaluwarsa</th>
-                                    <th>Kunci Status SIP</th>
-                                    <th>Status SPK & RKK</th>
-                                    <th>Wewenang Tindakan Klinis</th>
-                                    <th>Mitigasi Hukum</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($stafNonAktifPelayanan as $i => $dok)
-                                    @php
-                                        $sipOver = $dok->sipTerbaru;
-                                        $spkOver = $dok->kredensialTerbaru ?: $dok->spkTerbaru;
-                                        $sisaOver = $sipOver ? $sipOver->hitungSisaHari() : 0;
-                                    @endphp
-                                    <tr>
-                                        <td>{{ $i + 1 }}</td>
-                                        <td>
-                                            <span class="fw-bold text-dark">{{ $dok->user->nama ?? '-' }}</span><br>
-                                            <span class="text-muted">{{ $dok->ksm->nama_ksm ?? '-' }} &bull; {{ $dok->spesialisasi }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="font-monospace fw-semibold text-danger">{{ $sipOver->nomor_sip ?? '-' }}</span><br>
-                                            <span class="text-muted">Jatuh Tempo: {{ $sipOver && $sipOver->tanggal_kadaluarsa ? $sipOver->tanggal_kadaluarsa->format('d/m/Y') : '-' }} ({{ abs($sisaOver) }} hari lalu)</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-danger text-white shadow-2xs"><i class="fa-solid fa-lock me-1"></i> Overdue (Terkunci)</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-ban me-1"></i> DITANGGUHKAN</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-danger text-white"><i class="fa-solid fa-shield-xmark me-1"></i> Terblokir Administratif</span><br>
-                                            <span class="text-muted fs-2xs">Bebas Pelayanan Tindakan Mandiri</span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary-subtle text-dark border"><i class="fa-solid fa-scale-balanced me-1"></i> Terlindungi dr Risiko Malpraktik</span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="alert alert-success py-2 px-3 mb-0 fs-xs d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-success"></i>
-                        <span>Nihil: Seluruh staf medis yang aktif berpraktek memiliki SIP absah atau masa tenggang legal (Kepatuhan 100% Audit KPS).</span>
-                    </div>
-                @endif
-            </div>
-
-            <h6 class="fw-bold text-dark mb-2 px-1">Rekapitulasi Lengkap Pemantauan Masa Berlaku SIP Staf Medis</h6>
             <table class="table table-hover align-middle mb-0 fs-sm">
                 <thead class="table-light">
                     <tr>
@@ -288,7 +273,7 @@
                             $isSuspended = $dokterObj?->isSuspended();
                         @endphp
                         <tr class="{{ $isSuspended ? 'table-danger-subtle' : '' }}">
-                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ method_exists($data, 'firstItem') && $data->firstItem() ? ($data->firstItem() + $idx) : ($idx + 1) }}</td>
                             <td>
                                 <span class="fw-semibold text-dark">{{ $dokterObj->user->nama ?? '-' }}</span><br>
                                 <span class="text-muted fs-xs">{{ $dokterObj->ksm->nama_ksm ?? '-' }}</span>
@@ -358,7 +343,7 @@
                 <tbody>
                     @forelse($data as $idx => $v)
                         <tr>
-                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ method_exists($data, 'firstItem') && $data->firstItem() ? ($data->firstItem() + $idx) : ($idx + 1) }}</td>
                             <td>{{ $v->created_at->format('d/m/Y H:i') }}</td>
                             <td class="fw-semibold text-dark">{{ $v->dokter->user->nama ?? '-' }}</td>
                             <td>{{ $v->dokter->ksm->nama_ksm ?? '-' }}</td>
@@ -397,7 +382,7 @@
                     @forelse($data as $idx => $k)
                         @php $sisa = $k->hitungSisaHari(); @endphp
                         <tr>
-                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ method_exists($data, 'firstItem') && $data->firstItem() ? ($data->firstItem() + $idx) : ($idx + 1) }}</td>
                             <td class="fw-semibold text-dark">{{ $k->dokter->user->nama ?? '-' }}</td>
                             <td>{{ $k->dokter->ksm->nama_ksm ?? '-' }}</td>
                             <td><span class="font-monospace fs-xs">{{ $k->nomor_spk }}</span></td>
@@ -441,7 +426,7 @@
                 <tbody>
                     @forelse($data as $idx => $n)
                         <tr>
-                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ method_exists($data, 'firstItem') && $data->firstItem() ? ($data->firstItem() + $idx) : ($idx + 1) }}</td>
                             <td>{{ $n->created_at->format('d/m/Y H:i:s') }}</td>
                             <td class="fw-semibold text-dark">{{ $n->user->nama ?? '-' }}</td>
                             <td><span class="font-monospace fs-xs">{{ $n->user->no_wa ?? '-' }}</span></td>
@@ -460,5 +445,13 @@
             </table>
         @endif
     </div>
+
+    <!-- Paginasi Baku 10 Data per Halaman -->
+    @if(method_exists($data, 'hasPages') && $data->hasPages())
+        <div class="card-footer bg-white py-2 px-3 border-top d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+            <span class="fs-xs text-muted">Menampilkan {{ $data->firstItem() }} – {{ $data->lastItem() }} dari {{ $data->total() }} data (Baku: 10 per halaman)</span>
+            <div>{{ $data->links() }}</div>
+        </div>
+    @endif
 </div>
 @endsection

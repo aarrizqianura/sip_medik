@@ -19,7 +19,7 @@ class LaporanController extends Controller
         $jenis = $request->input('jenis', '1');
         $ksmList = Ksm::orderBy('nama_ksm')->get();
 
-        $data = $this->ambilDataLaporan($jenis, $request);
+        $data = $this->ambilDataLaporan($jenis, $request, true);
 
         // Tahap 7: Daftar Staf Medis Non-Aktif Pelayanan (Audit Akreditasi Pokja KPS)
         $stafNonAktifPelayanan = Dokter::with(['user', 'ksm', 'sipTerbaru', 'spkTerbaru'])
@@ -39,7 +39,7 @@ class LaporanController extends Controller
         return view('laporan.index', compact('jenis', 'ksmList', 'data', 'stafNonAktifPelayanan'));
     }
 
-    protected function ambilDataLaporan(string $jenis, Request $request)
+    protected function ambilDataLaporan(string $jenis, Request $request, bool $paginate = false)
     {
         switch ($jenis) {
             case '1': // Laporan Data Staf Medis & Status SIP
@@ -58,7 +58,7 @@ class LaporanController extends Controller
                     });
                 }
 
-                return $query->get();
+                return $paginate ? $query->paginate(10)->withQueryString() : $query->get();
 
             case '2': // Laporan Monitoring Masa Berlaku SIP (Audit Akreditasi KPS)
                 $query = DokumenSip::with(['dokter.user', 'dokter.ksm', 'dokter.spkTerbaru'])
@@ -74,7 +74,9 @@ class LaporanController extends Controller
                     });
                 }
 
-                return $query->orderBy('tanggal_kadaluarsa')->get();
+                $query->orderBy('tanggal_kadaluarsa');
+
+                return $paginate ? $query->paginate(10)->withQueryString() : $query->get();
 
             case '3': // Laporan Verifikasi Dokumen SIP (Komite Medik)
                 $query = DokumenSip::with(['dokter.user', 'dokter.ksm', 'verifikator']);
@@ -95,7 +97,9 @@ class LaporanController extends Controller
                     });
                 }
 
-                return $query->latest()->get();
+                $query->latest();
+
+                return $paginate ? $query->paginate(10)->withQueryString() : $query->get();
 
             case '4': // Laporan Masa Berlaku SPK & RKK Dokter
                 $query = KredensialKlinis::with(['dokter.user', 'dokter.ksm']);
@@ -110,7 +114,9 @@ class LaporanController extends Controller
                     });
                 }
 
-                return $query->orderBy('tanggal_berakhir_spk')->get();
+                $query->orderBy('tanggal_berakhir_spk');
+
+                return $paginate ? $query->paginate(10)->withQueryString() : $query->get();
 
             case '5': // Laporan Riwayat Notifikasi Pengingat Jatuh Tempo
                 $query = Notifikasi::with(['user', 'dokumenSip']);
@@ -125,7 +131,9 @@ class LaporanController extends Controller
                     $query->whereDate('created_at', '<=', $request->tgl_selesai);
                 }
 
-                return $query->latest()->get();
+                $query->latest();
+
+                return $paginate ? $query->paginate(10)->withQueryString() : $query->get();
 
             default:
                 return collect();

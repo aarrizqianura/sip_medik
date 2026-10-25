@@ -134,6 +134,62 @@ class PengajuanSipController extends Controller
     }
 
     /**
+     * Halaman Mandiri: Riwayat Pengajuan & Log Berkas SIP Dokter
+     */
+    public function riwayatDokumen(Request $request)
+    {
+        $user = auth()->user();
+        $dokter = $user->dokter;
+
+        if (! $dokter && ! in_array($user->role, ['super_admin', 'admin_sdm'])) {
+            return redirect()->route('dashboard')->with('error', 'Profil dokter tidak ditemukan untuk akun ini.');
+        }
+
+        $targetDokter = $dokter;
+        if (! $targetDokter && $request->filled('id_dokter')) {
+            $targetDokter = Dokter::findOrFail($request->id_dokter);
+        }
+
+        $sipList = $targetDokter
+            ? $targetDokter->dokumenSip()->with(['verifikator', 'dispensasiVerifikator'])->orderByDesc('created_at')->paginate(10)
+            : collect();
+
+        return view('dokter.riwayat', [
+            'dokter' => $targetDokter,
+            'sipList' => $sipList,
+            'isStrValid' => $targetDokter ? $targetDokter->isStrValidDanTerkunci() : false,
+        ]);
+    }
+
+    /**
+     * Preview Berkas PDF SIP secara aman (Mencegah eror 403 Forbidden)
+     */
+    public function previewFile(int $id)
+    {
+        $sip = DokumenSip::with('dokter')->findOrFail($id);
+        $user = auth()->user();
+
+        if ($user->role === 'dokter' && $sip->dokter && $sip->dokter->id_user !== $user->id) {
+            abort(403, 'Akses dokumen tidak diizinkan.');
+        }
+
+        if (! $sip->file_sip) {
+            abort(404, 'Berkas pindaian SIP tidak ditemukan.');
+        }
+
+        $path = storage_path('app/public/'.$sip->file_sip);
+        if (! file_exists($path)) {
+            abort(404, 'Berkas fisik pindaian tidak ditemukan di server penyimpanan.');
+        }
+
+        return response()->file($path, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.basename($path).'"',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    /**
      * Tahap 6: Formulir Pengajuan Bukti Proses Perizinan DPMPTSP/Dinkes (Masa Tenggang)
      */
     public function createDispensasi(int $id)

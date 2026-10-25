@@ -14,13 +14,18 @@ class VerifikasiSipController extends Controller
 {
     public function index(Request $request)
     {
+        $tab = $request->input('tab', 'menunggu');
+
         $query = DokumenSip::with(['dokter.user', 'dokter.ksm', 'verifikator']);
 
-        if ($request->filled('status_verifikasi')) {
-            $query->where('status_verifikasi', $request->status_verifikasi);
+        if ($tab === 'arsip') {
+            $query->whereIn('status_verifikasi', ['disetujui', 'ditolak']);
+            if ($request->filled('status_verifikasi')) {
+                $query->where('status_verifikasi', $request->status_verifikasi);
+            }
         } else {
-            // Default tunjukkan yang menunggu verifikasi terlebih dahulu
-            $query->orderByRaw("CASE WHEN status_verifikasi = 'menunggu' THEN 1 ELSE 2 END");
+            // Default: Layar kerja bersih hanya memuat dokumen yang berstatus Menunggu Telaah
+            $query->where('status_verifikasi', 'menunggu');
         }
 
         if ($request->filled('cari')) {
@@ -33,9 +38,13 @@ class VerifikasiSipController extends Controller
             });
         }
 
-        $sipList = $query->latest()->paginate(15)->withQueryString();
+        $countMenunggu = DokumenSip::where('status_verifikasi', 'menunggu')->count();
+        $countArsip = DokumenSip::whereIn('status_verifikasi', ['disetujui', 'ditolak'])->count();
 
-        return view('verifikasi.index', compact('sipList'));
+        // Maksimal 10 baris per halaman
+        $sipList = $query->latest()->paginate(10)->withQueryString();
+
+        return view('verifikasi.index', compact('sipList', 'tab', 'countMenunggu', 'countArsip'));
     }
 
     public function show($id)

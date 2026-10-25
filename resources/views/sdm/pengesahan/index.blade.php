@@ -378,7 +378,7 @@
 </div>
 @endif
 
-<!-- TAB CONTENT 3: Buku Induk Seluruh e-Arsip Kepegawaian -->
+<!-- TAB CONTENT 3: Buku Induk Seluruh e-Arsip Kepegawaian (Tabel Sederhana & Modal Detail) -->
 @if($statusTab === 'semua')
 <div class="card shadow-xs">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
@@ -386,20 +386,17 @@
             <h6 class="fw-bold text-dark mb-0">
                 <i class="fa-solid fa-boxes-packing text-teal me-2"></i>Buku Induk Repositori Digital Kepegawaian (e-Arsip)
             </h6>
-            <small class="text-muted fs-xs">Status integritas 4 pilar instrumen legalitas (STR, SIP, SPK, RKK) seluruh dokter</small>
+            <small class="text-muted fs-xs">Daftar staf medis dan kepatuhan 4 pilar instrumen legalitas (STR, SIP, SPK, RKK)</small>
         </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0 fs-sm">
             <thead class="table-light">
                 <tr>
-                    <th>Dokter</th>
-                    <th>Status Praktik</th>
-                    <th>Pilar 1: STR</th>
-                    <th>Pilar 2: SIP</th>
-                    <th>Pilar 3: SPK Direktur</th>
-                    <th>Pilar 4: RKK</th>
-                    <th class="text-end">Aksi</th>
+                    <th>Nama Dokter</th>
+                    <th>Kelompok Staf Medis (KSM)</th>
+                    <th>Status Legalitas</th>
+                    <th class="text-end" style="width: 220px;">Aksi Terpadu</th>
                 </tr>
             </thead>
             <tbody>
@@ -411,57 +408,132 @@
                     <tr>
                         <td>
                             <div class="fw-bold text-dark">{{ $dok->user->nama ?? '-' }}</div>
-                            <small class="text-muted">{{ $dok->ksm->nama_ksm ?? '-' }} &bull; NIP: {{ $dok->nip_nrp }}</small>
+                            <small class="text-muted font-monospace fs-3xs">NIP: {{ $dok->nip_nrp }}</small>
                         </td>
                         <td>
-                            {!! $dok->status_praktik_badge !!}
+                            <div class="fw-semibold text-teal fs-xs">{{ $dok->ksm->nama_ksm ?? '-' }}</div>
+                            <small class="text-secondary fs-3xs">{{ $dok->spesialisasi }}</small>
                         </td>
                         <td>
-                            @if($dok->nomor_str)
-                                <div class="fs-xs font-monospace">{{ $dok->nomor_str }}</div>
-                                @if($dok->is_str_locked)
-                                    <span class="badge bg-success-subtle text-success fs-3xs"><i class="fa-solid fa-lock me-1"></i>Terkunci</span>
-                                @else
-                                    <span class="badge bg-warning-subtle text-warning-emphasis fs-3xs">Terbuka</span>
-                                @endif
-                            @else
-                                <span class="badge bg-danger-subtle text-danger fs-3xs">Kosong</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($sip)
-                                <div class="fs-xs font-monospace">{{ $sip->nomor_sip }}</div>
-                                <span class="status-pill status-{{ $sip->status }} fs-3xs">{{ $sip->status_label }}</span>
-                            @else
-                                <span class="badge bg-secondary-subtle text-secondary fs-3xs">Belum ada</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($spk && $spk->nomor_spk)
-                                <div class="fs-xs font-monospace">{{ $spk->nomor_sk_direktur ?: $spk->nomor_spk }}</div>
-                                <span class="badge {{ $spk->status_kredensial === 'aktif' ? 'bg-success' : 'bg-warning text-dark' }} fs-3xs">
-                                    {{ $spk->status_label }}
-                                </span>
-                            @else
-                                <span class="badge bg-secondary-subtle text-secondary fs-3xs">Belum ada</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($spk && is_array($spk->daftar_rkk))
-                                <span class="badge bg-teal-subtle text-teal fs-3xs">{{ count($spk->daftar_rkk) }} Kewenangan</span>
-                            @else
-                                <span class="badge bg-secondary-subtle text-secondary fs-3xs">Belum diatur</span>
-                            @endif
+                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                                {!! $dok->status_praktik_badge !!}
+                                {!! $dok->arsip_status_badge !!}
+                            </div>
                         </td>
                         <td class="text-end">
-                            <a href="{{ route('sdm.arsip.show', $dok->id) }}" class="btn btn-xs btn-outline-teal">
-                                <i class="fa-solid fa-folder-open me-1"></i> e-Arsip
-                            </a>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-2xs btn-outline-teal" data-bs-toggle="modal" data-bs-target="#modalLegalitas{{ $dok->id }}">
+                                    <i class="fa-solid fa-circle-info me-1"></i> Detail Legalitas
+                                </button>
+                                <a href="{{ route('sdm.arsip.show', $dok->id) }}" class="btn btn-2xs btn-teal text-white" title="Buka e-Arsip">
+                                    <i class="fa-solid fa-folder-open me-1"></i> e-Arsip
+                                </a>
+                            </div>
+
+                            <!-- Modal Detail 4 Pilar Legalitas -->
+                            <div class="modal fade" id="modalLegalitas{{ $dok->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered text-start">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-dark-teal text-white py-2">
+                                            <h6 class="modal-title fs-sm fw-bold">
+                                                <i class="fa-solid fa-landmark me-2"></i>Status 4 Pilar Legalitas: {{ $dok->user->nama ?? '-' }}
+                                            </h6>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body fs-sm">
+                                            <div class="p-2 bg-light rounded border mb-3">
+                                                <div class="row g-2 fs-xs">
+                                                    <div class="col-6">
+                                                        <span class="text-muted d-block">NIP / NRP:</span>
+                                                        <strong class="font-monospace text-dark">{{ $dok->nip_nrp }}</strong>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <span class="text-muted d-block">KSM & Spesialis:</span>
+                                                        <strong class="text-teal">{{ $dok->ksm->kode_ksm ?? '-' }} ({{ $dok->spesialisasi }})</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="list-group list-group-flush fs-xs">
+                                                <!-- Pilar 1: STR -->
+                                                <div class="list-group-item px-0 py-2">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark"><i class="fa-solid fa-certificate text-primary me-1"></i> Pilar 1: Surat Tanda Registrasi (STR)</strong>
+                                                        @if($dok->is_str_locked)
+                                                            <span class="badge bg-success text-white fs-3xs"><i class="fa-solid fa-lock me-1"></i> Terkunci</span>
+                                                        @else
+                                                            <span class="badge bg-warning text-dark fs-3xs">Terbuka</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-muted">
+                                                        No. STR: <span class="font-monospace fw-semibold text-dark">{{ $dok->nomor_str ?: 'Belum diisi' }}</span> &bull; 
+                                                        Status: {{ $dok->status_str === 'seumur_hidup' ? 'Seumur Hidup' : 'Berkala' }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Pilar 2: SIP -->
+                                                <div class="list-group-item px-0 py-2">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark"><i class="fa-solid fa-file-contract text-teal me-1"></i> Pilar 2: Surat Izin Praktik (SIP)</strong>
+                                                        @if($sip)
+                                                            <span class="status-pill status-{{ $sip->status }} fs-3xs">{{ $sip->status_label }}</span>
+                                                        @else
+                                                            <span class="badge bg-secondary fs-3xs">Belum ada</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-muted">
+                                                        No. SIP: <span class="font-monospace fw-semibold text-dark">{{ $sip ? $sip->nomor_sip : '-' }}</span> &bull; 
+                                                        Exp: {{ $sip && $sip->tanggal_kadaluarsa ? $sip->tanggal_kadaluarsa->format('d/m/Y') : '-' }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Pilar 3: SPK Direktur -->
+                                                <div class="list-group-item px-0 py-2">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark"><i class="fa-solid fa-stamp text-success me-1"></i> Pilar 3: Surat Penugasan Klinis (SPK)</strong>
+                                                        @if($spk && $spk->status_kredensial === 'aktif')
+                                                            <span class="badge bg-success text-white fs-3xs">Aktif</span>
+                                                        @else
+                                                            <span class="badge bg-warning text-dark fs-3xs">{{ $spk ? $spk->status_label : 'Belum Terbit' }}</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-muted">
+                                                        No. SPK / SK: <span class="font-monospace fw-semibold text-dark">{{ $spk ? ($spk->nomor_sk_direktur ?: $spk->nomor_spk) : '-' }}</span> &bull; 
+                                                        s.d {{ $spk && $spk->tanggal_berakhir_spk ? $spk->tanggal_berakhir_spk->format('d/m/Y') : '-' }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Pilar 4: RKK -->
+                                                <div class="list-group-item px-0 py-2">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark"><i class="fa-solid fa-list-check text-warning me-1"></i> Pilar 4: Rincian Kewenangan Klinis (RKK)</strong>
+                                                        @if($spk && is_array($spk->daftar_rkk))
+                                                            <span class="badge bg-teal-subtle text-teal fs-3xs">{{ count($spk->daftar_rkk) }} Kewenangan</span>
+                                                        @else
+                                                            <span class="badge bg-secondary fs-3xs">Belum diatur</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="text-muted">
+                                                        Tindakan Mandiri: <strong>{{ $spk?->rkk_mandiri_count ?? 0 }}</strong> &bull; 
+                                                        Tindakan Supervisi: <strong>{{ $spk?->rkk_supervisi_count ?? 0 }}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer py-2">
+                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                            <a href="{{ route('sdm.arsip.show', $dok->id) }}" class="btn btn-teal text-white btn-sm">
+                                                <i class="fa-solid fa-box-archive me-1"></i> Buka e-Arsip Penuh
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">Belum ada data dokter yang tersimpan.</td>
+                        <td colspan="4" class="text-center py-4 text-muted">Belum ada data dokter yang tersimpan.</td>
                     </tr>
                 @endforelse
             </tbody>

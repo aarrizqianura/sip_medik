@@ -3,290 +3,258 @@
 @section('title', 'Portal Personal Dokter')
 
 @section('content')
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
-    <div>
-        <h4 class="fw-bold text-dark mb-1">Selamat Datang, {{ $user->nama }}</h4>
-        <p class="text-secondary fs-sm mb-0">
-            NIP/NRP: <strong>{{ $dokter->nip_nrp ?? '-' }}</strong> &bullet; 
-            KSM: <strong>{{ $dokter->ksm->nama_ksm ?? '-' }}</strong> &bullet; 
-            Spesialisasi: <strong>{{ $dokter->spesialisasi ?? '-' }}</strong>
-        </p>
-    </div>
-    <div>
-        <a href="{{ route('dokter.arsip.saya') }}" class="btn btn-outline-teal btn-sm me-1">
-            <i class="fa-solid fa-box-archive me-1"></i> e-Arsip Saya
-        </a>
-        <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-teal text-white btn-sm d-inline-flex align-items-center gap-2">
-            <i class="fa-solid fa-file-arrow-up"></i>
-            <span>Unggah Perpanjangan SIP Baru</span>
-        </a>
+<!-- 2. Ucapan Selamat Datang (Nama Dokter beserta Gelar) -->
+<div class="mb-3">
+    <h4 class="fw-bold text-dark mb-1">Selamat Datang, {{ $user->nama }}</h4>
+
+    <!-- 3. NIP, KSM, dan Spesialisasi -->
+    <div class="d-flex align-items-center gap-2 flex-wrap text-secondary fs-sm mt-2">
+        <span class="badge bg-light text-secondary border fs-xs py-2 px-3">
+            <i class="fa-solid fa-id-card me-1 text-teal"></i>NIP/NRP: <strong class="text-dark">{{ $dokter->nip_nrp ?? '-' }}</strong>
+        </span>
+        <span class="badge bg-light text-secondary border fs-xs py-2 px-3">
+            <i class="fa-solid fa-hospital me-1 text-teal"></i>KSM: <strong class="text-dark">{{ $dokter->ksm->nama_ksm ?? '-' }}</strong>
+        </span>
+        <span class="badge bg-light text-secondary border fs-xs py-2 px-3">
+            <i class="fa-solid fa-user-doctor me-1 text-teal"></i>Spesialisasi: <strong class="text-dark">{{ $dokter->spesialisasi ?? '-' }}</strong>
+        </span>
     </div>
 </div>
 
-@if($dokter && $dokter->isSuspended())
-<div class="alert alert-danger border-start border-4 border-danger shadow-xs p-3 mb-4">
-    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
-        <div class="d-flex align-items-start gap-3">
-            <div class="bg-danger text-white p-2 rounded-circle fs-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                <i class="fa-solid fa-ban"></i>
-            </div>
-            <div>
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="badge bg-danger text-white"><i class="fa-solid fa-lock me-1"></i> STATUS: OVERDUE & DITANGGUHKAN</span>
-                    <span class="badge bg-white text-danger border border-danger-subtle"><i class="fa-solid fa-triangle-exclamation me-1"></i> Tindakan Mandiri Terblokir</span>
-                </div>
-                <h6 class="fw-bold text-danger mb-1">Wewenang Tindakan Klinis Mandiri Anda Ditangguhkan Secara Administratif</h6>
-                <p class="fs-xs text-dark mb-0">
-                    Masa berlaku SIP Anda telah kedaluwarsa tanpa status dispensasi aktif. Sesuai Standar Akreditasi <strong>Pokja KPS</strong> dan regulasi Komite Medik RSUD dr. H. Moch. Ansari Saleh, instrumen <strong>Surat Penugasan Klinis (SPK) & RKK Anda DITANGGUHKAN</strong> guna melindungi fasyankes dan dokter dari risiko tuntutan malpraktik.
-                </p>
-                <div class="alert alert-warning py-1 px-2 mt-2 mb-0 fs-2xs d-inline-flex align-items-center gap-2">
-                    <i class="fa-solid fa-circle-info text-warning-emphasis"></i>
-                    <span><strong>Pemulihan Hak Praktik:</strong> Penangguhan wewenang klinis hanya dapat dicabut (re-activated) setelah Anda mengunggah fisik SIP definitif baru yang disahkan kembali melalui verifikasi Komite Medik (Tahap 3) dan SK Direktur (Tahap 4).</span>
-                </div>
-            </div>
+<!-- 4. Kartu Status Legalitas Terpadu Dokter -->
+<div class="card shadow-xs border-0 overflow-hidden mb-4 bg-white">
+    <div class="card-header bg-dark-teal text-white py-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-teal-300 fs-5"></i>
+            <h5 class="fw-bold mb-0 text-white fs-6">Kartu Status Legalitas Terpadu Dokter</h5>
         </div>
-        <div class="d-flex flex-column gap-2 text-nowrap">
-            <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-danger btn-sm fw-bold shadow-xs">
-                <i class="fa-solid fa-upload me-1"></i> Unggah SIP Definitif Baru (Tahap 2)
-            </a>
-            @if($sipAktif && $sipAktif->isBisaAjukanDispensasi())
-                <a href="{{ route('dokter.dispensasi.create', $sipAktif->id) }}" class="btn btn-outline-danger btn-sm fs-xs">
-                    <i class="fa-solid fa-file-invoice me-1"></i> Ajukan Dispensasi Resi (Tahap 6)
-                </a>
-            @endif
-        </div>
+        <span class="badge bg-teal-subtle text-teal fw-bold fs-xs px-3 py-1">
+            RSUD dr. H. Moch. Ansari Saleh
+        </span>
     </div>
-</div>
-@elseif($dokter && $dokter->isAktifLegal())
-<div class="alert alert-success border-success shadow-xs d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
-    <div class="d-flex align-items-center gap-3">
-        <i class="fa-solid fa-shield-check fs-2 text-success"></i>
-        <div>
-            <div class="fw-bold text-dark fs-6">Status Profil: HAK PRAKTIK PENUH (AKTIF_LEGAL)</div>
-            <div class="fs-xs text-secondary">
-                SK Direktur No. <strong>{{ $dokter->nomor_sk_direktur ?: ($kredensialAktif?->nomor_sk_direktur ?: ($kredensialAktif?->nomor_spk ?: '-')) }}</strong> &bull; Berkas STR, SIP, SPK, dan RKK Anda telah terkunci aman di Repositori e-Arsip Kepegawaian. Tanggal jatuh tempo SIP terpantau otomatis.
-            </div>
-        </div>
-    </div>
-    <a href="{{ route('dokter.arsip.saya') }}" class="btn btn-sm btn-success fw-semibold text-nowrap">
-        <i class="fa-solid fa-folder-open me-1"></i> Buka e-Arsip Saya
-    </a>
-</div>
-@endif
 
-<!-- Primary Countdown Card & Status Legalitas -->
-<div class="row g-4 mb-4">
-    <!-- Countdown SIP -->
-    <div class="col-lg-6">
+    <div class="card-body p-4 bg-white">
         @if($sipAktif)
             @php
                 $sisaHari = $sipAktif->hitungSisaHari();
                 if ($sisaHari < 0) {
-                    $headerBg = 'bg-danger text-white';
-                    $alertIcon = 'fa-triangle-exclamation';
+                    $accentColor = 'text-danger';
+                    $badgeClass = 'bg-danger text-white';
                     $statusTitle = 'SIP TELAH KEDALUWARSA';
-                    $statusDesc = 'Masa berlaku izin praktik telah berakhir ' . abs($sisaHari) . ' hari yang lalu. Mohon segera mengunggah perpanjangan SIP Anda.';
+                    $statusDesc = 'Masa berlaku izin praktik berakhir ' . abs($sisaHari) . ' hari yang lalu. Segera perbarui berkas izin praktik definitif.';
                 } elseif ($sisaHari <= 30) {
-                    $headerBg = 'bg-danger-subtle text-danger border-danger';
-                    $alertIcon = 'fa-bell';
+                    $accentColor = 'text-danger';
+                    $badgeClass = 'bg-danger text-white';
                     $statusTitle = 'STATUS KRITIS (≤ 30 HARI)';
-                    $statusDesc = 'Sisa masa berlaku SIP Anda tinggal ' . $sisaHari . ' hari lagi. Segera tindak lanjuti berkas perpanjangan di DPMPTSP.';
+                    $statusDesc = 'Sisa masa berlaku SIP tinggal ' . $sisaHari . ' hari lagi. Segera koordinasikan perizinan di DPMPTSP.';
                 } elseif ($sisaHari <= 90) {
-                    $headerBg = 'bg-warning-subtle text-warning border-warning';
-                    $alertIcon = 'fa-clock';
+                    $accentColor = 'text-warning-emphasis';
+                    $badgeClass = 'bg-warning text-dark';
                     $statusTitle = 'DUE SOON (31 - 90 HARI)';
-                    $statusDesc = 'Memasuki periode persiapan perpanjangan izin praktik dokter.';
+                    $statusDesc = 'Memasuki periode persiapan perpanjangan izin praktik DPMPTSP dan kecukupan SKP SatuSehat.';
                 } else {
-                    $headerBg = 'bg-success-subtle text-success border-success';
-                    $alertIcon = 'fa-circle-check';
+                    $accentColor = 'text-teal';
+                    $badgeClass = 'bg-success text-white';
                     $statusTitle = 'SIP AKTIF & ABSAH';
-                    $statusDesc = 'Izin praktik resmi DPMPTSP berlaku dan legal untuk pelayanan klinis.';
+                    $statusDesc = 'Izin praktik resmi DPMPTSP berlaku aktif untuk pelayanan klinis di fasyankes RSUD Ansari Saleh.';
                 }
             @endphp
-            <div class="card shadow-sm h-100 border">
-                <div class="card-header p-3 {{ $headerBg }} d-flex align-items-center justify-content-between">
-                    <div class="fw-bold d-flex align-items-center gap-2">
-                        <i class="fa-solid {{ $alertIcon }}"></i>
-                        <span>{{ $statusTitle }}</span>
+
+            @if($dokter && $dokter->isSuspended())
+                <div class="alert alert-danger border-start border-4 border-danger shadow-xs p-3 mb-4 rounded-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="bg-danger text-white p-2 rounded-circle fs-4 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-ban"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <span class="badge bg-danger text-white"><i class="fa-solid fa-lock me-1"></i> STATUS: OVERDUE & DITANGGUHKAN</span>
+                                <span class="badge bg-white text-danger border border-danger-subtle"><i class="fa-solid fa-triangle-exclamation me-1"></i> Tindakan Mandiri Terblokir</span>
+                            </div>
+                            <h6 class="fw-bold text-danger mb-1">Wewenang Tindakan Klinis Mandiri Anda Ditangguhkan Secara Administratif</h6>
+                            <p class="fs-xs text-dark mb-0">
+                                Masa berlaku SIP Anda telah kedaluwarsa. Sesuai Standar Akreditasi <strong>Pokja KPS</strong>, instrumen <strong>Surat Penugasan Klinis (SPK) & RKK Anda DITANGGUHKAN</strong> guna melindungi fasyankes dan dokter dari risiko medikolegal.
+                            </p>
+                        </div>
                     </div>
-                    <span class="badge bg-white text-dark shadow-xs">Praktik ke-{{ $sipAktif->tempat_praktik_ke }}</span>
                 </div>
-                <div class="card-body p-4 text-center">
-                    <div class="text-muted fs-xs text-uppercase fw-semibold mb-1">Sisa Masa Berlaku Dokumen SIP</div>
-                    <div class="display-3 fw-bolder {{ $sisaHari < 0 ? 'text-danger' : ($sisaHari <= 30 ? 'text-danger' : ($sisaHari <= 90 ? 'text-warning' : 'text-teal')) }}">
-                        {{ $sisaHari < 0 ? abs($sisaHari) : $sisaHari }}
-                    </div>
-                    <div class="fs-6 fw-semibold text-secondary mb-3">
-                        {{ $sisaHari < 0 ? 'Hari Terlewat' : 'Hari Tersisa' }}
+            @endif
+
+            <div class="p-4 rounded-3 border" style="background: linear-gradient(135deg, #f0fdfa 0%, #ffffff 100%);">
+                <div class="row align-items-center g-4">
+                    <!-- Countdown Display -->
+                    <div class="col-lg-5 text-center text-lg-start pe-lg-4 border-end-lg pb-3 pb-lg-0" style="border-color: #ccfbf1 !important;">
+                        <span class="badge {{ $badgeClass }} px-3 py-1 mb-2 fs-xs fw-semibold">
+                            <i class="fa-solid fa-circle-dot me-1"></i> {{ $statusTitle }}
+                        </span>
+                        <div class="d-flex align-items-baseline justify-content-center justify-content-lg-start gap-2 my-1">
+                            <span class="display-3 fw-bolder {{ $accentColor }} lh-1">
+                                {{ $sisaHari < 0 ? abs($sisaHari) : $sisaHari }}
+                            </span>
+                            <span class="fs-5 fw-bold text-secondary">
+                                {{ $sisaHari < 0 ? 'Hari Terlewat' : 'Hari Tersisa' }}
+                            </span>
+                        </div>
+                        <p class="text-secondary fs-sm mt-2 mb-0">{{ $statusDesc }}</p>
                     </div>
 
-                    <div class="p-3 bg-light rounded-3 text-start mb-3">
-                        <div class="row g-2 fs-sm">
-                            <div class="col-6">
-                                <span class="text-muted d-block fs-xs">Nomor SIP:</span>
-                                <strong>{{ $sipAktif->nomor_sip }}</strong>
+                    <!-- Metadata Dokumen SIP Definitif -->
+                    <div class="col-lg-7 ps-lg-4">
+                        <div class="row g-3 fs-sm">
+                            <div class="col-sm-6">
+                                <div class="p-2 rounded border bg-white h-100">
+                                    <span class="text-muted d-block fs-3xs text-uppercase fw-semibold">Nomor SIP DPMPTSP</span>
+                                    <strong class="font-monospace text-dark fs-xs text-break">{{ $sipAktif->nomor_sip }}</strong>
+                                </div>
                             </div>
-                            <div class="col-6">
-                                <span class="text-muted d-block fs-xs">Tanggal Kedaluwarsa:</span>
-                                <strong>{{ $sipAktif->tanggal_kadaluarsa ? $sipAktif->tanggal_kadaluarsa->translatedFormat('d F Y') : '-' }}</strong>
+                            <div class="col-sm-6">
+                                <div class="p-2 rounded border bg-white h-100">
+                                    <span class="text-muted d-block fs-3xs text-uppercase fw-semibold">Tempat Praktik</span>
+                                    <span class="badge bg-teal-subtle text-teal border border-teal-subtle fs-3xs">
+                                        SIP Ke-{{ $sipAktif->tempat_praktik_ke }} ({{ $sipAktif->fasyankes ?: 'RSUD Ansari Saleh' }})
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-2 rounded border bg-white h-100">
+                                    <span class="text-muted d-block fs-3xs text-uppercase fw-semibold">Tanggal Terbit</span>
+                                    <strong class="text-dark fs-xs">{{ $sipAktif->tanggal_terbit ? $sipAktif->tanggal_terbit->translatedFormat('d F Y') : '-' }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="p-2 rounded border bg-white h-100">
+                                    <span class="text-muted d-block fs-3xs text-uppercase fw-semibold">Tanggal Kedaluwarsa</span>
+                                    <strong class="text-danger fs-xs">{{ $sipAktif->tanggal_kadaluarsa ? $sipAktif->tanggal_kadaluarsa->translatedFormat('d F Y') : '-' }}</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <p class="text-secondary fs-sm mb-0">{{ $statusDesc }}</p>
                 </div>
             </div>
         @else
-            <div class="card shadow-sm h-100 border border-dashed text-center p-4 d-flex flex-column justify-content-center">
-                <i class="fa-regular fa-folder-open fs-1 text-muted mb-3"></i>
-                <h5 class="fw-bold text-dark">Belum Ada Dokumen SIP Aktif</h5>
-                <p class="text-secondary fs-sm mb-3">Anda belum memiliki dokumen SIP yang telah disahkan oleh Komite Medik.</p>
-                <div>
-                    <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-teal text-white btn-sm">
-                        <i class="fa-solid fa-plus me-1"></i> Unggah SIP Pertama
-                    </a>
-                </div>
+            <div class="p-4 rounded-3 border border-dashed text-center bg-light">
+                <i class="fa-regular fa-folder-open fs-2 text-muted mb-2"></i>
+                <h6 class="fw-bold text-dark mb-1">Belum Ada Dokumen SIP Aktif Terverifikasi</h6>
+                <p class="text-secondary fs-sm mb-0">Anda belum memiliki dokumen SIP aktif yang telah divalidasi oleh Subkomite Kredensial.</p>
             </div>
         @endif
     </div>
+</div>
 
-    <!-- Status STR & Kredensial Klinis -->
-    <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header fw-bold text-dark">
-                <i class="fa-solid fa-id-card-clip text-teal me-2"></i>
-                Instrumen Legalitas & Kredensial Klinis
-            </div>
-            <div class="card-body">
-                <!-- Status STR -->
-                <div class="p-3 bg-light rounded-3 mb-3 border">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="fw-semibold text-dark fs-sm"><i class="fa-solid fa-certificate text-primary me-2"></i> Surat Tanda Registrasi (STR)</span>
-                        <span class="badge {{ $dokter->status_str === 'seumur_hidup' ? 'bg-success' : 'bg-warning text-dark' }}">
-                            {{ $dokter->status_str === 'seumur_hidup' ? 'STR Seumur Hidup (UU No. 17/2023)' : 'STR Berkala' }}
-                        </span>
-                    </div>
-                    <small class="text-muted">Status registrasi dokter konsil kedokteran KKI / Kemenkes RI.</small>
-                </div>
+<!-- 5. 3 Pilar Instrumen Legalitas Staf Medis -->
+<div class="card shadow-xs border-0 overflow-hidden mb-4 bg-white">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-landmark text-teal fs-5"></i>
+            <h5 class="fw-bold mb-0 text-dark fs-6">3 Pilar Instrumen Legalitas Staf Medis</h5>
+        </div>
+        <span class="badge bg-light text-secondary border fs-xs">
+            Standar Akreditasi KPS
+        </span>
+    </div>
 
-                <!-- Status SPK & RKK -->
-                <div class="p-3 bg-light rounded-3 border">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="fw-semibold text-dark fs-sm"><i class="fa-solid fa-stamp text-teal me-2"></i> Surat Penugasan Klinis (SPK & RKK)</span>
-                        @if($kredensialAktif)
-                            <span class="badge {{ $kredensialAktif->status_kredensial === 'aktif' ? 'bg-success' : 'bg-warning text-dark' }}">
-                                {{ $kredensialAktif->status_label }}
+    <div class="card-body p-4 bg-white">
+        <div class="row g-3">
+            <!-- Pilar 1: STR Seumur Hidup -->
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between hover-shadow">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="fs-xs fw-bold text-uppercase text-secondary text-nowrap">
+                                <i class="fa-solid fa-certificate text-primary me-1"></i> Pilar 1
                             </span>
-                        @else
-                            <span class="badge bg-secondary">Belum Diterbitkan</span>
-                        @endif
-                    </div>
-                    @if($kredensialAktif)
-                        <div class="fs-xs text-secondary">
-                            <div>No. SPK Direktur: <strong>{{ $kredensialAktif->nomor_spk }}</strong></div>
-                            <div>Masa Berlaku s.d: <strong>{{ $kredensialAktif->tanggal_berakhir_spk ? $kredensialAktif->tanggal_berakhir_spk->translatedFormat('d F Y') : '-' }}</strong></div>
+                            <span class="badge {{ $dokter->status_str === 'seumur_hidup' ? 'bg-success text-white' : 'bg-warning text-dark' }} fs-3xs text-nowrap">
+                                {{ $dokter->status_str === 'seumur_hidup' ? 'Seumur Hidup' : 'Berkala' }}
+                            </span>
                         </div>
-                    @else
-                        <small class="text-muted">Hubungi Subkomite Kredensial untuk pengesahan rincian kewenangan klinis Anda.</small>
-                    @endif
+                        <h6 class="fw-bold text-dark mb-1 fs-sm">Surat Tanda Registrasi (STR)</h6>
+                        <div class="font-monospace fs-xs fw-bold text-teal mb-1">
+                            {{ $dokter->nomor_str ? chunk_split($dokter->nomor_str, 4, ' ') : 'Belum diisi' }}
+                        </div>
+                        <small class="text-muted fs-3xs d-block">
+                            UU Kesehatan No. 17/2023 &bull; Terverifikasi SatuSehat
+                        </small>
+                    </div>
+                    <div class="mt-3 pt-2 border-top">
+                        {!! $dokter->status_verifikasi_str_badge !!}
+                    </div>
                 </div>
+            </div>
 
-                <!-- Status Kepegawaian -->
-                <div class="mt-3 px-2 d-flex align-items-center justify-content-between text-secondary fs-sm">
-                    <span>Status Kepegawaian:</span>
-                    <strong class="text-dark">{{ $dokter->status_kepegawaian ?? '-' }}</strong>
+            <!-- Pilar 2: SIP Aktif DPMPTSP -->
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between hover-shadow">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="fs-xs fw-bold text-uppercase text-secondary text-nowrap">
+                                <i class="fa-solid fa-file-contract text-teal me-1"></i> Pilar 2
+                            </span>
+                            @if($sipAktif)
+                                <span class="badge {{ $sipAktif->status === 'aktif' ? 'bg-success' : 'bg-warning text-dark' }} fs-3xs text-nowrap">
+                                    {{ $sipAktif->status_label }}
+                                </span>
+                            @else
+                                <span class="badge bg-secondary fs-3xs text-nowrap">Nihil</span>
+                            @endif
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1 fs-sm">Surat Izin Praktik (SIP)</h6>
+                        <div class="font-monospace fs-xs fw-bold text-dark mb-1 text-truncate">
+                            {{ $sipAktif ? $sipAktif->nomor_sip : 'Belum ada SIP disahkan' }}
+                        </div>
+                        <small class="text-muted fs-3xs d-block text-truncate">
+                            Penerbit: {{ $sipAktif?->penerbit_sip ?: 'DPMPTSP Kota Banjarmasin' }}
+                        </small>
+                    </div>
+                    <div class="mt-3 pt-2 border-top fs-3xs text-secondary d-flex justify-content-between align-items-center">
+                        <span>Jatuh Tempo:</span>
+                        <strong class="text-dark">{{ $sipAktif?->tanggal_kadaluarsa ? $sipAktif->tanggal_kadaluarsa->format('d/m/Y') : '-' }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pilar 3: SPK & RKK Berlaku -->
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 border bg-light h-100 d-flex flex-column justify-content-between hover-shadow">
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="fs-xs fw-bold text-uppercase text-secondary text-nowrap">
+                                <i class="fa-solid fa-stamp text-success me-1"></i> Pilar 3
+                            </span>
+                            @if($kredensialAktif)
+                                <span class="badge {{ $kredensialAktif->status_kredensial === 'aktif' ? 'bg-success' : 'bg-warning text-dark' }} fs-3xs text-nowrap">
+                                    {{ $kredensialAktif->status_label }}
+                                </span>
+                            @else
+                                <span class="badge bg-secondary fs-3xs text-nowrap">Belum Ada</span>
+                            @endif
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1 fs-sm">Surat Penugasan Klinis (SPK/RKK)</h6>
+                        <div class="font-monospace fs-xs fw-bold text-dark mb-1 text-truncate">
+                            {{ $kredensialAktif ? ($kredensialAktif->nomor_spk ?: $kredensialAktif->nomor_sk_direktur) : 'Proses Kredensialing' }}
+                        </div>
+                        <small class="text-muted fs-3xs d-block">
+                            Siklus Evaluasi 3 Tahunan Subkomite Kredensial
+                        </small>
+                    </div>
+                    <div class="mt-3 pt-2 border-top fs-3xs text-secondary d-flex justify-content-between align-items-center">
+                        <span>Masa Berlaku s.d:</span>
+                        <strong class="text-dark">{{ $kredensialAktif?->tanggal_berakhir_spk ? $kredensialAktif->tanggal_berakhir_spk->format('d/m/Y') : '-' }}</strong>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Riwayat Pengajuan & Berkas SIP Dokter -->
-<div class="card shadow-xs">
-    <div class="card-header d-flex align-items-center justify-content-between">
-        <div class="fw-bold text-dark">
-            <i class="fa-solid fa-clock-rotate-left text-teal me-2"></i>
-            Riwayat Pengajuan & Arsip Berkas SIP Saya
-        </div>
-        <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-outline-teal btn-sm fs-xs">
-            <i class="fa-solid fa-plus me-1"></i> Unggah Baru
-        </a>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0 fs-sm">
-            <thead class="table-light">
-                <tr>
-                    <th>Tgl Pengajuan</th>
-                    <th>Nomor Izin SIP</th>
-                    <th>Fasyankes & Praktik</th>
-                    <th>Prasyarat SKP</th>
-                    <th>Masa Berlaku</th>
-                    <th>Status Antrean</th>
-                    <th>Catatan Telaah</th>
-                    <th>Berkas</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($sipList as $item)
-                    <tr>
-                        <td>{{ $item->created_at->format('d/m/Y') }}</td>
-                        <td>
-                            <span class="font-monospace fw-semibold fs-xs">{{ $item->nomor_sip }}</span>
-                            <div class="text-muted fs-2xs">{{ $item->penerbit_sip ?: 'DPMPTSP' }}</div>
-                        </td>
-                        <td>
-                            <div class="fw-semibold text-dark fs-xs">{{ $item->fasyankes ?: 'RSUD dr. H. Moch. Ansari Saleh' }}</div>
-                            <span class="badge bg-light text-secondary border fs-2xs">SIP Ke-{{ $item->tempat_praktik_ke }}</span>
-                        </td>
-                        <td>
-                            {!! $item->status_kecukupan_skp_badge !!}
-                            @if($item->file_rekomendasi_skp)
-                                <div class="mt-1">
-                                    <a href="{{ asset('storage/' . $item->file_rekomendasi_skp) }}" target="_blank" class="btn btn-2xs btn-outline-teal text-teal" title="Rekomendasi SKP SatuSehat">
-                                        <i class="fa-solid fa-file-pdf"></i> Rekomendasi
-                                    </a>
-                                </div>
-                            @endif
-                        </td>
-                        <td>
-                            <div>{{ $item->tanggal_terbit ? $item->tanggal_terbit->format('d/m/Y') : '-' }} s.d</div>
-                            <small class="fw-bold text-dark">{{ $item->tanggal_kadaluarsa ? $item->tanggal_kadaluarsa->format('d/m/Y') : '-' }}</small>
-                        </td>
-                        <td>
-                            @if($item->status_verifikasi === 'disetujui')
-                                <span class="badge bg-success-subtle text-success border border-success"><i class="fa-solid fa-circle-check me-1"></i> Disetujui</span>
-                            @elseif($item->status_verifikasi === 'ditolak')
-                                <span class="badge bg-danger-subtle text-danger border border-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Ditolak</span>
-                            @else
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning"><i class="fa-solid fa-hourglass-half me-1"></i> Menunggu Verifikasi</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($item->catatan_verifikasi)
-                                <span class="text-secondary fs-xs fst-italic">{{ $item->catatan_verifikasi }}</span>
-                            @else
-                                <span class="text-muted fs-xs">-</span>
-                            @endif
-                        </td>
-                        <td>
-                            @if($item->file_sip)
-                                <a href="{{ asset('storage/' . $item->file_sip) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat Berkas Lembar SIP">
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                </a>
-                            @else
-                                <span class="text-muted fs-xs">-</span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            Belum ada dokumen SIP yang diunggah.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+<!-- 6. Tombol "Riwayat dan Berkas Saya" dan Tombol "Ajukan Perpanjangan SIP" -->
+<div class="d-flex align-items-center gap-3 flex-wrap mb-4">
+    <a href="{{ route('dokter.riwayat') }}" class="btn btn-outline-teal px-4 py-2 fw-semibold shadow-xs d-inline-flex align-items-center gap-2">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>Riwayat dan Berkas Saya</span>
+    </a>
+    <a href="{{ route('dokter.pengajuan.create') }}" class="btn btn-teal text-white px-4 py-2 fw-bold shadow-xs d-inline-flex align-items-center gap-2">
+        <i class="fa-solid fa-file-circle-plus"></i>
+        <span>Ajukan Perpanjangan SIP</span>
+    </a>
 </div>
 @endsection

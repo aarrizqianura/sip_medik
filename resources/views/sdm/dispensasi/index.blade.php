@@ -21,57 +21,77 @@
     </div>
 </div>
 
-<!-- 4 Metrik Indikator Kunci Tahap 6 -->
+<!-- Metrik Indikator Kunci (Hanya menampilkan yang memiliki data/non-nol) -->
+@php
+    $indicatorCards = [
+        [
+            'count' => $totalMenunggu,
+            'border' => 'border-warning',
+            'label' => 'Antrean Menunggu',
+            'badge' => 'bg-warning text-dark',
+            'icon' => 'fa-hourglass-half',
+            'badge_text' => 'Menunggu',
+            'text_class' => 'text-warning-emphasis',
+            'desc' => 'Resi DPMPTSP perlu diverifikasi'
+        ],
+        [
+            'count' => $totalAktif,
+            'border' => 'border-teal',
+            'label' => 'Grace Period Aktif',
+            'badge' => 'bg-teal text-white',
+            'icon' => 'fa-business-time',
+            'badge_text' => 'On-Process',
+            'text_class' => 'text-teal',
+            'desc' => 'Dispensasi aktif (14–30 hari)'
+        ],
+        [
+            'count' => $totalDokterDalamProses,
+            'border' => 'border-success',
+            'label' => 'Pelayanan Terproteksi',
+            'badge' => 'bg-success text-white',
+            'icon' => 'fa-shield-check',
+            'badge_text' => 'Aman',
+            'text_class' => 'text-success',
+            'desc' => 'Dokter berstatus dalam_proses'
+        ],
+        [
+            'count' => $totalRiwayat,
+            'border' => 'border-secondary',
+            'label' => 'Riwayat Berakhir',
+            'badge' => 'bg-secondary text-white',
+            'icon' => 'fa-clock-rotate-left',
+            'badge_text' => 'Arsip',
+            'text_class' => 'text-secondary',
+            'desc' => 'Dispensasi selesai / ditolak'
+        ]
+    ];
+    $visibleCards = array_filter($indicatorCards, fn($item) => $item['count'] > 0);
+    $cardCols = match(count($visibleCards)) {
+        1 => 'col-12',
+        2 => 'col-sm-6',
+        3 => 'col-sm-6 col-lg-4',
+        default => 'col-sm-6 col-xl-3'
+    };
+@endphp
+
+@if(count($visibleCards) > 0)
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <div class="card h-100 border-start border-4 border-warning shadow-xs">
+    @foreach($visibleCards as $card)
+    <div class="{{ $cardCols }}">
+        <div class="card h-100 border-start border-4 {{ $card['border'] }} shadow-xs">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Antrean Menunggu</span>
-                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-hourglass-half"></i> Menunggu</span>
+                    <span class="text-secondary fs-xs fw-semibold text-uppercase">{{ $card['label'] }}</span>
+                    <span class="badge {{ $card['badge'] }}"><i class="fa-solid {{ $card['icon'] }}"></i> {{ $card['badge_text'] }}</span>
                 </div>
-                <div class="fs-2 fw-bold text-warning-emphasis">{{ $totalMenunggu }}</div>
-                <div class="text-muted fs-xs mt-1">Resi DPMPTSP perlu diverifikasi</div>
+                <div class="fs-2 fw-bold {{ $card['text_class'] }}">{{ $card['count'] }}</div>
+                <div class="text-muted fs-xs mt-1">{{ $card['desc'] }}</div>
             </div>
         </div>
     </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card h-100 border-start border-4 border-teal shadow-xs">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Grace Period Aktif</span>
-                    <span class="badge bg-teal text-white"><i class="fa-solid fa-business-time"></i> On-Process</span>
-                </div>
-                <div class="fs-2 fw-bold text-teal">{{ $totalAktif }}</div>
-                <div class="text-muted fs-xs mt-1">Dispensasi aktif (14–30 hari)</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card h-100 border-start border-4 border-success shadow-xs">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Pelayanan Terproteksi</span>
-                    <span class="badge bg-success text-white"><i class="fa-solid fa-shield-check"></i> Aman</span>
-                </div>
-                <div class="fs-2 fw-bold text-success">{{ $totalDokterDalamProses }}</div>
-                <div class="text-muted fs-xs mt-1">Dokter berstatus dalam_proses</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <div class="card h-100 border-start border-4 border-secondary shadow-xs">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-secondary fs-xs fw-semibold text-uppercase">Riwayat Berakhir</span>
-                    <span class="badge bg-secondary text-white"><i class="fa-solid fa-clock-rotate-left"></i> Arsip</span>
-                </div>
-                <div class="fs-2 fw-bold text-secondary">{{ $totalRiwayat }}</div>
-                <div class="text-muted fs-xs mt-1">Dispensasi selesai / ditolak</div>
-            </div>
-        </div>
-    </div>
+    @endforeach
 </div>
+@endif
 
 <!-- Filter Toolbar -->
 <div class="card shadow-xs mb-4">
